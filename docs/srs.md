@@ -5,7 +5,7 @@
 **Team:** DUBROEUCQ Baptiste [69540460002] and LEPOUTRE Léo [69540460045]
 **Repository:** https://github.com/Bptdbr/cpe334-inventory-borrowing
 **Related Issue:** #2
-**Version:** 1.0 (baseline for Deliverable 1)
+**Version:** 1.1 (baseline for Deliverable 1)
 **Last updated:** 03/11/2026
 
 ---
@@ -29,7 +29,7 @@ A **department equipment loan desk**. Equipment is tracked as **individual physi
 | Sprint | Goal | Checkpoint |
 |---|---|---|
 | 1 | Authentication, authorization, catalog, borrow request, checkout, consultation | Deliverable 1, 8 Nov 2026 |
-| 2 | Return, due dates, overdue status, request cancellation, item maintenance | Deliverable 2, 29 Nov 2026 |
+| 2 | Request approval, return, due dates, overdue status, request cancellation, item maintenance | Deliverable 2, 29 Nov 2026 |
 | 3 | Search and filtering, inventory reports, hardening, usability, failure handling | Final delivery, 13 Dec 2026 |
 
 ---
@@ -63,7 +63,7 @@ There is no global administrator in this product. Accounts are created by a seed
 |---|---|
 | Self-registration, password recovery, email verification, advanced account administration | Not required by the course specification (D-12). |
 | Quantity-based stock tracking | Individual copies were chosen (D-01). |
-| Approval workflow for requests in Sprint 1 | Deferred (D-02). May be revisited in Sprint 2. |
+| Approval workflow for requests in Sprint 1 | Deferred to Sprint 2 (D-02, D-15). |
 | Walk-up checkout without a prior request | Checkout always starts from a request (D-06). |
 | Fees, fines, payments, deposits | No payment functionality required. |
 | Email, SMS or other external notifications | No external messaging service required. |
@@ -104,7 +104,7 @@ Decisions behind these assumptions are recorded in `docs/decisions.md`.
 ### State summary
 
 - `Item.status`: `AVAILABLE`, `ON_LOAN` (Sprint 2 adds `MAINTENANCE`, `RETIRED`).
-- `LoanRequest.status`: `PENDING` → `FULFILLED` (Sprint 2 adds `CANCELLED`).
+- `LoanRequest.status`: `PENDING` → `FULFILLED` in Sprint 1 (Sprint 2 adds `APPROVED`, `REJECTED`, `CANCELLED`; checkout then starts from `APPROVED`).
 - `Loan.status`: `ACTIVE` (Sprint 2 adds `RETURNED`; `OVERDUE` is derived or stored according to the Sprint 2 design).
 
 ---
@@ -128,7 +128,9 @@ Sprint column: S1, S2 or S3 = sprint in which the requirement is implemented and
 | FR-04 | The system shall display the catalog of all items with their asset tag, name, description and availability status. | Borrower, Custodian | S1 |
 | FR-05 | The system shall allow a custodian to add an item to the catalog; the item is assigned to that custodian as managing custodian and starts as `AVAILABLE`. | Custodian | S1 |
 | FR-11 | The system shall allow the managing custodian to edit an item's name and description, and to retire an item that is not currently on loan. | Custodian | S2 |
-| FR-15 | The system shall allow users to search the catalog by name or asset tag and to filter by availability status. | Borrower, Custodian | S3 |
+| FR-20 | The system shall allow the managing custodian to put an item that is not on loan into `MAINTENANCE` and back to `AVAILABLE`; an item in maintenance cannot be requested or checked out. | Custodian | S2 |
+| FR-15 | The system shall allow users to search the catalog by name or asset tag and to filter by availability status and category. | Borrower, Custodian | S3 |
+| FR-21 | The system shall allow a custodian to assign a category to an item they manage, and shall display the category in the catalog. | Custodian | S3 |
 
 ### 6.3 Borrow requests
 
@@ -138,6 +140,7 @@ Sprint column: S1, S2 or S3 = sprint in which the requirement is implemented and
 | FR-07 | The system shall allow a borrower to view their own requests and loans with their current status. | Borrower | S1 |
 | FR-08 | The system shall allow a custodian to view the requests concerning the items they manage. | Custodian | S1 |
 | FR-12 | The system shall allow a borrower to cancel their own `PENDING` request. | Borrower | S2 |
+| FR-19 | The system shall allow the managing custodian to approve or reject a `PENDING` request for one of their items; a rejection records a reason visible to the borrower. | Custodian | S2 |
 
 ### 6.4 Checkout, loans and return
 
@@ -173,12 +176,13 @@ Sprint column: S1, S2 or S3 = sprint in which the requirement is implemented and
 | BR-04 | A borrower may only see and act on their own requests and loans. Access to another borrower's record returns 404 and no private data. | FR-07 | S1 | Integration test |
 | BR-05 | Two concurrent checkouts of the same item shall never produce two `ACTIVE` loans: exactly one succeeds and the other is rejected with 409. | FR-09 | S1 | Concurrency integration test |
 | BR-06 | A borrower may not hold two `PENDING` requests for the same item. The second request is rejected with 409. | FR-06 | S1 | Integration test |
-| BR-07 | Only a `PENDING` request may be checked out, and at most once. A `FULFILLED` request cannot be checked out again. | FR-09 | S1 | Integration test |
+| BR-07 | In Sprint 1, only a `PENDING` request may be checked out, and at most once (from Sprint 2, see BR-13). A `FULFILLED` request cannot be checked out again. | FR-09 | S1 | Integration test |
 | BR-08 | Only the managing custodian may create catalog changes to an item; a custodian cannot modify or add items on behalf of another custodian. | FR-05, FR-11 | S1 (add), S2 (edit) | Integration test |
 | BR-09 | Recording a return closes the loan and makes the item `AVAILABLE`; an item that is not on loan cannot be returned. | FR-10 | S2 | Unit and integration test |
 | BR-10 | A loan is overdue if and only if its due date has passed and it has not been returned. | FR-13, FR-14 | S2 | Unit test with controlled clock |
 | BR-11 | A borrower may only cancel their own request, and only while it is `PENDING`. | FR-12 | S2 | Integration test |
 | BR-12 | A retired item cannot be requested, and an item currently on loan cannot be retired. | FR-11 | S2 | Integration test |
+| BR-13 | From Sprint 2, only the managing custodian may approve or reject a `PENDING` request, and a checkout is only possible from an `APPROVED` request. This changes the precondition of BR-07 through a visible contract revision. | FR-09, FR-19 | S2 | Integration test |
 
 ---
 
@@ -233,14 +237,14 @@ Response convention (D-07): **401** unauthenticated, **403** role not allowed fo
 | Sprint | Functional requirements | Business rules | Non-functional requirements |
 |---|---|---|---|
 | S1 | FR-01 to FR-09, FR-17, FR-18 | BR-01 to BR-08 (BR-08 add only) | NFR-01 to NFR-08, NFR-10 (design) |
-| S2 | FR-10 to FR-14 | BR-08 (edit), BR-09 to BR-12 | NFR-08 (updates) |
-| S3 | FR-15, FR-16 | n/a | NFR-09, NFR-11, NFR-08 (final) |
+| S2 | FR-10 to FR-14, FR-19, FR-20 | BR-08 (edit), BR-09 to BR-13 | NFR-08 (updates) |
+| S3 | FR-15, FR-16, FR-21 | n/a | NFR-09, NFR-11, NFR-08 (final) |
 
 ---
 
 ## 11. Decisions and open questions
 
-Decisions D-01 to D-13 and open questions Q-01 to Q-03 are recorded in `docs/decisions.md`. Q-01 is resolved; requirements that depend on a still-open question are noted in their rows (see A-08).
+Decisions D-01 to D-18 and open questions Q-01 to Q-03 are recorded in `docs/decisions.md`. Q-01 and Q-02 are resolved; requirements that depend on a still-open question are noted in their rows (see A-08).
 
 ---
 
@@ -249,5 +253,6 @@ Decisions D-01 to D-13 and open questions Q-01 to Q-03 are recorded in `docs/dec
 | Version | Date | Change | Author |
 |---|---|---|---|
 | 1.0 | 03/11/2026 | Initial baseline: FR-01 to FR-18, BR-01 to BR-12, NFR-01 to NFR-11 | Léo |
+| 1.1 | 03/11/2026 | Added FR-19 to FR-21 and BR-13 (approval in Sprint 2, maintenance status, item categories); updated sprint allocation | Léo |
 
 Requirement IDs are stable. A requirement that changes is revised in place with a new row in this history; a requirement that is dropped is marked `Withdrawn`, never renumbered.
