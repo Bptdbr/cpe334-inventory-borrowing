@@ -5,7 +5,7 @@
 **Team:** DUBROEUCQ Baptiste [69540460002] and LEPOUTRE Léo [69540460045]
 **Repository:** https://github.com/Bptdbr/cpe334-inventory-borrowing
 **Related Issues:** #4 (sections 1 to 7), #5 (sections 8 to 12)
-**Version:** 0.1 (architecture and data, draft for PR review)
+**Version:** 0.2 (architecture and data, draft for PR review)
 **Last updated:** 03/11/2026
 
 > **Document status.** Sections 1 to 7 (architecture, stack, repository structure, data model, rule enforcement, database setup and seed) are written in Issue #4. Sections 8 to 12 (role/permission matrix, authentication lifecycle, API and UI conventions, configuration, deployment plan) are written in Issue #5 and are listed here only as headings so that both Issues can be merged without conflicts.
@@ -113,7 +113,7 @@ Each module contains its routes, its service and its input schemas. Modules comm
 | Validation | Zod | Request schemas, typed inputs | Manual validation |
 | ORM and migrations | Prisma and Prisma Migrate | Typed data access, versioned migrations | Raw SQL, TypeORM |
 | Database | PostgreSQL 16 | Durable relational storage, partial unique indexes, row locking | MySQL (no partial indexes), SQLite (file lost on redeployment without a volume) |
-| Authentication | Signed JWT (D-14) with revocation list (D-18); library and password-hashing algorithm are specified in section 8 | Stateless session | Server-side sessions |
+| Authentication | Signed JWT (D-14) with revocation list (D-18); library and password-hashing algorithm are specified in section 9 | Stateless session | Server-side sessions |
 | Frontend | React with Vite and React Router | Single-page application | Server-rendered pages |
 | Unit and integration tests | Vitest, with Supertest for HTTP-level API tests | Rules, persistence, permissions | Jest |
 | End-to-end tests | Playwright | Critical user journeys through the UI | Cypress |
@@ -804,3 +804,4 @@ The GCP access method is provided with the Lab 5 instructions, so this plan is p
 | Version | Date | Change | Author |
 |---|---|---|---|
 | 0.1 | 03/11/2026 | Sections 1 to 7: architecture, stack, structure, data model, rule enforcement, database setup and seed | Léo |
+| 0.2 | 04/11/2026 | sections 8 to 12 : permissions, authentication, API, UI, configuration | Baptiste |

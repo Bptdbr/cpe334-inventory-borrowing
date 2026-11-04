@@ -3,7 +3,7 @@
 **Project:** Inventory and Borrowing System (Theme 2), CPE 334, Semester 1/2026
 **Team:** DUBROEUCQ Baptiste [69540460002] and LEPOUTRE Léo [69540460045]
 **Related Issue:** #2 (Theme decisions and SRS)
-**Document version:** 1.1 (draft for PR review)
+**Document version:** 1.2 (draft for PR review)
 **Last updated:** 03/11/2026
 
 This log records every significant product and design decision, its alternatives, and the reason it was taken. Decisions are never silently rewritten: if a decision changes, a new row is added and the old one is marked `Superseded`.
@@ -34,7 +34,9 @@ This log records every significant product and design decision, its alternatives
 | D-16 | Do the `MAINTENANCE` item status and item categories stay in the product? | (a) Remove. (b) Keep. | **(b) Keep.** `MAINTENANCE` in Sprint 2, categories in Sprint 3. | They belong to the full product and are allocated to later sprints. | 03/11/2026 | Baptiste, Léo | Accepted |
 | D-17 | Technology stack. | Several. | **TypeScript, Node.js, Express, React with Vite, PostgreSQL 16, Prisma, Zod, Vitest, Supertest, Playwright** (details in the system-level SDS, section 3). | One language across the stack, same family of tools as Labs 1 to 4, PostgreSQL supports the partial unique indexes required by D-04. | 03/11/2026 | Baptiste, Léo | To confirm (Express, Vite, Zod and the test tools are proposals to be validated during the review of the SDS) |
 | D-18 | How is logout implemented with a signed token? | (a) Client deletes the token only. (b) Server records the token identifier (`jti`) as revoked until it expires. | **(b)** A `revoked_tokens` table stores revoked identifiers until natural expiry. | A signed token cannot otherwise be invalidated, and FR-02 requires the token to be unusable after logout. | 03/11/2026 | Baptiste, Léo | To confirm (during the review of the SDS) |
-
+| D-19 | How are passwords hashed? | (a) argon2id. (b) bcrypt (bcryptjs). | **(a) argon2id** through the `argon2` package, default parameters. Fall back to bcryptjs only if `argon2` cannot be installed on a team machine; this would be recorded as a new decision. | argon2id is the current recommended algorithm; the salt is embedded in the hash string. Meets NFR-02. | 04/11/2026 | Baptiste, Léo | To confirm |
+| D-20 | Does the token carry the user's role? | (a) Role inside the JWT. (b) Token carries only the user id; the user is loaded from the database on each request. | **(b)** The JWT contains `sub`, `jti`, `iat`, `exp` only. The auth middleware loads the user from the database, so the role used for authorization is always the current one. | Avoids stale roles and makes the token useless for privilege tampering. Costs one query per request, acceptable here. | 04/11/2026 | Baptiste, Léo | To confirm |
+| D-21 | Where does the SPA store the token? | (a) `sessionStorage`. (b) `localStorage`. (c) HttpOnly cookie. | **(a) `sessionStorage`.** The token is deleted on logout and on any 401. | Survives a page refresh, ends when the tab closes. Readable by scripts (XSS risk), an accepted limitation for a course project with synthetic data, listed in the final limitations. | 04/11/2026 | Baptiste, Léo | To confirm |
 ---
 
 ## 2. Open questions
@@ -53,3 +55,4 @@ This log records every significant product and design decision, its alternatives
 |---|---|---|---|
 | 1.0 | 03/11/2026 | Initial decisions D-01 to D-13 recorded | Léo |
 | 1.1 | 03/11/2026 | Added D-14 to D-18; D-02 wording aligned with D-15; Q-02 resolved | Léo |
+| 1.2 | 04/11/2026 | Add D-19 to D-21 (To confirm) | Baptiste |
