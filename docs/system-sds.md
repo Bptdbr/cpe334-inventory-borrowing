@@ -573,15 +573,229 @@ Test IDs are assigned in the contract of F-01 (Issue #6).
 
 ## 10. API conventions and error handling
 
-*To be written in Issue #5.* The status-code rule already fixed in D-07 is: 401 unauthenticated, 403 role not allowed, 404 outside the user's scope, 409 state conflict, 422 invalid input.
+This section applies to every endpoint. Detailed request and response shapes are fixed in the feature contracts (Issues #6 to #8).
+
+### 10.1 Endpoint conventions
+
+| Aspect | Convention |
+|---|---|
+| Base path | All application endpoints are under `/api`. `GET /health` is the only endpoint outside it. |
+| Format | JSON only (`Content-Type: application/json`), UTF-8. |
+| Resource names | Plural nouns in lowercase: `/api/items`, `/api/requests`, `/api/loans`. |
+| Actions that are state transitions | A sub-resource verb on the record: `POST /api/requests/{id}/checkout`. |
+| Views scoped to the caller | `/mine` suffix for the borrower's own records (`/api/requests/mine`, `/api/loans/mine`). |
+| Identifiers | UUIDs. A malformed identifier returns 422. |
+| Dates | ISO 8601 strings in UTC, for example `2026-11-04T11:30:00.000Z` (A-05). |
+| Field names | camelCase in JSON (`itemId`, `assetTag`), snake_case in the database. |
+| Caller identity | Always from the token. No request carries a user id, role or `managed_by` value. |
+
+### 10.2 Success responses
+
+| Case | Status | Body |
+|---|---|---|
+| Read | 200 | The resource or an array of resources |
+| Creation | 201 | The created resource |
+| Action without content (logout) | 204 | Empty |
+
+Lists are returned as plain arrays in Sprint 1. Pagination is not required for the seeded catalog and is reconsidered with search in Sprint 3 (NFR-09).
+
+### 10.3 Error format
+
+Every error has the same body:
+
+    { "error": { "code": "ITEM_UNAVAILABLE", "message": "This item is not available." } }
+
+| Status | Codes (examples) | Used when |
+|---|---|---|
+| 401 | `UNAUTHENTICATED`, `INVALID_CREDENTIALS` | Missing, invalid, expired or revoked token; wrong login |
+| 403 | `FORBIDDEN_ROLE` | Role not allowed for the operation |
+| 404 | `NOT_FOUND` | Record absent or outside the caller's scope |
+| 409 | `ITEM_UNAVAILABLE`, `REQUEST_NOT_PENDING`, `DUPLICATE_PENDING_REQUEST`, `ACTIVE_LOAN_EXISTS` | Conflict with the current state |
+| 422 | `VALIDATION_ERROR` | Invalid input; may include a `details` array of field messages |
+| 500 | `INTERNAL_ERROR` | Unexpected failure |
+
+Rules:
+
+- `code` is stable and machine-readable; `message` is plain language for the user.
+- A 500 returns a generic message. Stack traces, SQL errors, file paths and library messages are logged on the server and never sent (NFR-05).
+- A 401 or 404 body never contains private data (NFR-01, BR-04).
+- Unknown routes return 404 with the same format.
+
+### 10.4 Validation
+
+| Aspect | Convention |
+|---|---|
+| Where | Route layer, with Zod schemas, before any service call. |
+| Unknown fields | Ignored, never trusted; identity fields are never read from the body. |
+| Order of checks | Authentication (401), role (403), input validation (422), scope (404), state (409). |
+
+### 10.5 Mapping of database errors
+
+| Database error | HTTP result |
+|---|---|
+| Unique violation (Prisma `P2002`) on the active-loan or pending-request index | 409 with the matching code |
+| Zero rows updated by a conditional update | 409 |
+| Any other database error | 500 `INTERNAL_ERROR`, details logged only |
+
+### 10.6 Verification
+
+| Requirement | Verified by |
+|---|---|
+| NFR-01 | API test over every protected endpoint without a token: 401 and no private data |
+| NFR-05 | API test that triggers a server error and inspects the body |
+| D-07 | Integration tests per code: 401, 403, 404, 409, 422 |
+
+Test IDs are assigned in the feature contracts (Issues #6 to #8).
 
 ## 11. UI conventions
 
-*To be written in Issue #5.*
+This section applies to every screen. It implements NFR-07 and the role-based navigation of the SPA. The UI never enforces authorization: it only reflects what the API allows, and every rule is enforced by the backend (section 8).
+
+### 11.1 Screens and navigation (Sprint 1)
+
+| Screen | Route | Borrower | Custodian | Feature |
+|---|---|---|---|---|
+| Login | `/login` | Public | Public | F-01 |
+| Catalog | `/items` | Yes | Yes (plus "Add item") | F-03 |
+| My requests and loans | `/my` | Yes | Hidden | F-04, F-06 |
+| Requests to process | `/manage/requests` | Hidden | Yes | F-05, F-06 |
+| Active loans | `/manage/loans` | Hidden | Yes | F-06 |
+
+- The navigation bar shows only the entries of the current role, read from `GET /api/auth/me`. It also shows the user's display name and a **Log out** button.
+- An unauthenticated visitor is redirected to `/login`. After login, the user lands on `/items`.
+- Typing the URL of a hidden screen does not grant access: the API answers 403 and the screen shows the error state.
+
+### 11.2 Shared behavior of every screen that loads data
+
+| State | Behavior | Test |
+|---|---|---|
+| Loading | A visible loading indicator replaces the content. Action buttons are disabled while their request is pending (prevents double submit). | E2E |
+| Empty | A message states that there is nothing to show and, where useful, what to do next (for example "No requests yet"). | E2E |
+| Error | A message shows the reason returned by the server, in plain language, with a retry action for read errors. | E2E |
+| Success | The result is displayed after the server confirms. The UI never assumes success before the response. | E2E |
+
+### 11.3 Server errors shown to the user
+
+| Status | Display |
+|---|---|
+| 401 | The token is deleted and the user is sent to `/login` with the message "Your session has expired, please log in again." |
+| 403 | "You are not allowed to do this." |
+| 404 | "This record was not found." |
+| 409 | The `message` from the server (for example "This item is not available."). The screen refreshes its data. |
+| 422 | Field-level messages from `details`, next to the fields. |
+| 500 or network failure | A generic message, "Something went wrong, please try again." No technical detail is shown. |
+
+### 11.4 Forms
+
+| Rule | Detail |
+|---|---|
+| Client-side checks | Required fields and length hints only, to help the user. They are not trusted: the server always validates (section 10.4). |
+| Login form | One generic message for invalid credentials, identical for an unknown user and a wrong password (FR-01). The password field is never prefilled or logged. |
+| Add item form | Fields: asset tag, name, description. `managed_by` is never sent (BR-08). |
+| Request action | Button "Request" on an `AVAILABLE` item. Disabled for `ON_LOAN` items, but the server still rejects the call (BR-02). |
+| Checkout action | Button "Check out" on a `PENDING` request in the custodian's list. |
+
+### 11.5 Accessibility and consistency
+
+- Status values are shown as text, never by color alone.
+- Every form control has a visible label.
+- The same component displays loading, empty and error states on all screens.
+- Contrast compliance (NFR-11) is verified in Sprint 3.
+
+### 11.6 Verification
+
+| Requirement | Verified by |
+|---|---|
+| NFR-07 | E2E test on selected screens: loading, empty and error states, and display of a server rejection reason |
+| FR-02 | E2E: after logout the user is back on `/login` and a protected screen is not reachable |
+
+Test IDs are assigned in the contracts of Issues #6 to #8 and in the E2E work of Issue #14.
 
 ## 12. Configuration and deployment plan
 
-*To be written in Issue #5.*
+This section covers NFR-04 (externalized configuration, no committed secret) and NFR-10 (clean checkout, ready for Docker). The Docker packaging, CI/CD and GCP deployment are delivered in Lab 5; this section fixes the design they rely on.
+
+### 12.1 Configuration principles
+
+| Principle | Detail |
+|---|---|
+| Environment only | All configuration is read from environment variables in `backend/src/config.ts`. No value is hard-coded. |
+| Fail fast | At startup the API validates the variables with a Zod schema. A missing or invalid required variable stops the process with a clear message that never prints secret values. |
+| No secret in Git | `.env` is listed in `.gitignore`. `.env.example` is committed and contains only dummy values. |
+| Same code everywhere | Local, test and deployed environments differ only by variable values. |
+
+### 12.2 Environment variables
+
+| Variable | Required | Example (dummy) | Purpose | Secret |
+|---|---|---|---|---|
+| `NODE_ENV` | Yes | `development` | `development`, `test` or `production` | No |
+| `PORT` | No (default 3000) | `3000` | API listening port | No |
+| `DATABASE_URL` | Yes | `postgresql://user:password@localhost:5432/inventory_dev` | PostgreSQL connection (section 7.1) | Yes |
+| `JWT_SECRET` | Yes | `change-me-use-a-long-random-value` | HS256 signing key (section 9.2); at least 32 characters | Yes |
+| `JWT_EXPIRES_IN_MINUTES` | No (default 60) | `60` | Token lifetime (NFR-06); shortened in tests | No |
+| `SEED_DEMO_PASSWORD` | Seed only | `change-me-demo` | Password given to the demo accounts by the seed (section 7.3) | Yes |
+| `CORS_ORIGIN` | Yes in production | `http://localhost:5173` | Allowed browser origin of the SPA | No |
+| `VITE_API_URL` | Frontend build | `http://localhost:3000` | API base URL compiled into the SPA | No |
+
+The test environment uses `DATABASE_URL` pointing to `inventory_test` (section 7.1). Real values are never written in the PDF, the README or Git; demo credentials are shared through the private course handoff.
+
+### 12.3 Local setup (summary, detailed in the README)
+
+| Step | Command |
+|---|---|
+| 1. Install dependencies | `npm install` (backend and frontend) |
+| 2. Configure | Copy `.env.example` to `.env` and set the values |
+| 3. Start PostgreSQL | Local installation or a development container |
+| 4. Create schema and demo data | `npm run db:migrate`, then `npm run db:seed` |
+| 5. Run | Start the API and the SPA (commands in the README) |
+| 6. Test | `npm test` (unit and integration), then the Playwright command for E2E |
+
+### 12.4 Container-readiness design
+
+| Requirement | Design choice |
+|---|---|
+| Stateless API | No domain state in process memory; sessions are tokens plus the `revoked_tokens` table (D-14, D-18). Several API instances can run behind a load balancer. |
+| Durable data | All data lives in PostgreSQL, which needs a persistent volume or a managed instance (NFR-03). |
+| Config by environment | Section 12.2; nothing is read from local files at runtime. |
+| Logs | Written to standard output, one line per event, with no secret or password. |
+| Health | `GET /health` returns 200 for the platform health check and does not expose private data. |
+| Migrations | `prisma migrate deploy` is run as an explicit step before starting the new API version, never by `db push`. |
+| Reproducible build | npm lock files committed; Node version pinned in `.nvmrc` and `engines`. |
+
+### 12.5 Planned Docker packaging (Lab 5)
+
+| Image | Content |
+|---|---|
+| `api` | Multi-stage build: install and compile TypeScript, then a slim runtime image with production dependencies, running as a non-root user. |
+| `web` | Multi-stage build: compile the SPA with Vite, then serve the static files with a small web server. |
+| Database | Official PostgreSQL 16 image for local compose; a managed instance in the cloud. |
+
+A compose file starts the three components locally with variables from `.env`. The goal is a working container from a fresh clone with documented commands only.
+
+### 12.6 Planned GCP deployment (Lab 5)
+
+| Component | Planned GCP service | Notes |
+|---|---|---|
+| API container | Cloud Run | Stateless, scales to zero, configured by environment variables |
+| Frontend | Cloud Run (static container) or Cloud Storage with a CDN | To be chosen in Lab 5 |
+| Database | Cloud SQL for PostgreSQL | Automated backups, data survives restarts and redeployments |
+| Secrets | Secret Manager | `DATABASE_URL`, `JWT_SECRET` injected as environment variables at deployment |
+| Images | Artifact Registry | Built and pushed by the pipeline |
+| Delivery | CI/CD from GitHub (for example GitHub Actions) | Build and tests on each PR; deploy accepted releases from `main`; failed required checks block the merge |
+
+The GCP access method is provided with the Lab 5 instructions, so this plan is provisional and will be revised then. Any change is recorded as a new decision.
+
+### 12.7 Release flow
+
+`feature branch` → PR into `sprint-1-staging` (reviewed by the teammate) → integration and acceptance checks → reviewed release PR into `main` → tag `v1.0-sprint1` → (Lab 5) pipeline deploys from `main`.
+
+### 12.8 Verification
+
+| Requirement | Verified by |
+|---|---|
+| NFR-04 | Repository inspection (`.env` ignored, `.env.example` complete) and a clean-clone setup run from the README |
+| NFR-10 | README run-through in Sprint 1; container build in Lab 5 |
+| NFR-03 | Integration test: create data, restart the application, read the data |
 
 ---
 
