@@ -1,9 +1,9 @@
 # Three-Sprint Plan
 
-**Product:** Equipment Inventory and Borrowing System (Theme 2), CPE 334, Semester 1/2026
-**Related Issue:** #3
-**Version:** 1.0 (draft for PR review)
-**Last updated:** 2026-11-03
+**Product:** Equipment Inventory and Borrowing System (Theme 2), CPE 334, Semester 1/2026  
+**Related Issue:** #3  
+**Version:** 1.1  
+**Last updated:** 2026-11-05  
 
 The plan covers the whole product baseline of `docs/srs.md`. Feature IDs come from `docs/features.md`; requirement coverage is shown in `docs/traceability.md`. The allocation of Sprints 2 and 3 follows decision D-11 and the SRS, and is provisional until reviewed at the start of Sprint 2. Any change is recorded in section 6.
 
@@ -12,10 +12,10 @@ The plan covers the whole product baseline of `docs/srs.md`. Feature IDs come fr
 | Sprint | Goal | Features | Checkpoint |
 |---|---|---|---|
 | 1 | Small working vertical slice with authentication, permissions and persistence | F-01 to F-06, SYS-01 (baseline), SYS-02 | Deliverable 1, 8 Nov 2026 |
-| 2 | Core expansion: return, due dates, overdue status, request cancellation, item maintenance | F-07 to F-10 | Deliverable 2, 29 Nov 2026 |
-| 3 | Completion and hardening: search, reports, accessibility, failure handling | F-11 to F-13 | Progress at 29 Nov 2026, complete by 13 Dec 2026 (final delivery) |
+| 2 | Core expansion: return, due dates, overdue status, request cancellation, item maintenance, request approval | F-07 to F-10, F-14 | Deliverable 2, 29 Nov 2026 |
+| 3 | Completion and hardening: search, categories, reports, accessibility, failure handling | F-11 to F-13 | Progress at 29 Nov 2026, complete by 13 Dec 2026 (final delivery) |
 
-Together the three sprints cover every feature of the inventory (F-01 to F-13) and every system responsibility (SYS-01, SYS-02).
+Together the three sprints cover every feature of the inventory (F-01 to F-14) and every system responsibility (SYS-01, SYS-02).
 
 ## 2. Sprint 1: working vertical slice (due 8 Nov 2026)
 
@@ -49,14 +49,15 @@ Together the three sprints cover every feature of the inventory (F-01 to F-13) a
 
 ## 3. Sprint 2: core expansion (due 29 Nov 2026)
 
-**Goal:** complete the loan lifecycle (return, due date, overdue) and borrower and custodian maintenance operations.
+**Goal:** complete the loan lifecycle (return, due date, overdue), borrower and custodian maintenance operations, and request approval.
 
 | Feature | Requirements | Depends on |
 |---|---|---|
 | F-07 Item return | FR-10, BR-09 | F-05 |
 | F-08 Due date and overdue status | FR-13, FR-14, BR-10 | F-05, F-07 |
 | F-09 Request cancellation | FR-12, BR-11 | F-04 |
-| F-10 Item maintenance | FR-11, BR-08 (edit), BR-12 | F-03 (and an update of F-04 for retired items) |
+| F-10 Item maintenance | FR-11, FR-20, BR-08 (edit), BR-12 | F-03 (and an update of F-04 for retired items) |
+| F-14 Request approval and rejection | FR-19, BR-13 | F-04 |
 
 **Dependencies and prerequisites:** the Sprint 1 release; the default loan period decided in the Sprint 2 SRS update (gap G-04); the stored or derived overdue decision (gap G-05).
 
@@ -68,7 +69,7 @@ Together the three sprints cover every feature of the inventory (F-01 to F-13) a
 
 | Feature | Requirements | Depends on |
 |---|---|---|
-| F-11 Catalog search and filtering | FR-15, NFR-09 | F-03 |
+| F-11 Catalog search, categories and filtering | FR-15, FR-21, NFR-09 | F-03 |
 | F-12 Inventory summary and overdue report | FR-16 | F-08 |
 | F-13 Hardening and accessibility | NFR-11, failure handling, usability, regression | All |
 
@@ -82,7 +83,7 @@ Together the three sprints cover every feature of the inventory (F-01 to F-13) a
 |---|---|---|
 | 15 Nov 2026 | Lab 5: Docker, CI/CD and GCP deployment | Uses the Sprint 1 release. The design is already container-ready (NFR-04, NFR-10). |
 | 22 Nov 2026 | Lab 6: cross-team UAT and defect management | Tests a recorded release; defect fixes are kept separate from feature work. |
-| 29 Nov 2026 | Lab 7: maintenance, metrics, release readiness | Needs a change to an already implemented behavior, not a backlog feature. The change is chosen with the instructor and tracked separately. |
+| 29 Nov 2026 | Lab 7: maintenance, metrics, release readiness | Needs a change to an already implemented behavior, not a backlog feature. The change is tracked separately. |
 
 Lab work happens alongside Sprint 2, so its Issues and PRs are labelled and identified separately from feature Issues.
 
@@ -91,9 +92,10 @@ Lab work happens alongside Sprint 2, so its Issues and PRs are labelled and iden
 | Risk | Mitigation |
 |---|---|
 | Sprint 1 is very busy on 7 and 8 Nov. | Contracts first, UI last; reduce screens rather than tests. |
-| Sprint 2 overlaps with Labs 5 to 7. | Keep Sprint 2 to four features and write contracts early. |
+| Sprint 2 overlaps with Labs 5 to 7. | Keep Sprint 2 to five features and write contracts early. |
 | Open questions (Q-02, Q-03, G-04, G-05) delay a contract. | Each is decided before the contract that depends on it. |
 
 | Version | Date | Change | Author |
 |---|---|---|---|
 | 1.0 | 2026-11-03 | Initial three-sprint plan | Baptiste |
+| 1.1 | 2026-11-05 | Added F-14 (FR-19, BR-13); allocated FR-20, FR-21; removed instructor wording | Léo |
