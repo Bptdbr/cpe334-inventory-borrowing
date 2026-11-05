@@ -5,7 +5,7 @@
 **Feature:** F-01 Authentication
 **Requirements:** FR-01, FR-02, FR-03, NFR-02, NFR-06 (supports NFR-04, NFR-05)
 **Decisions:** D-07, D-12, D-14, D-18, D-19, D-20, D-21
-**Version:** 1.0 (written before implementation)
+**Version:** 1.1 (written before implementation)
 **Last updated:** 2026-11-05
 
 The detailed design is in `docs/system-sds.md` (sections 8 to 10). This contract fixes the observable behavior, the acceptance criteria (AC-01 to AC-09) and the tests (TEST-01 to TEST-15) of F-01.
@@ -129,7 +129,7 @@ The UI does not decide access. It only reflects what the API returns.
 | TEST-09 | AC-04 | Integration (API) | Logged-in custodian | GET `/api/auth/me` | 200 with the custodian's id, username, display name and role `CUSTODIAN` |
 | TEST-10 | AC-05 | Integration (API + DB) | Logged-in user | POST logout | 204; the token's `jti` exists in `revoked_tokens` |
 | TEST-11 | AC-05 | Integration (API) | Token already logged out | GET `/api/auth/me` with the same token | 401 `UNAUTHENTICATED` |
-| TEST-12 | AC-06 | Integration (API) | Test configuration with a very short expiry | Wait past expiry, then GET `/api/auth/me` | 401 |
+| TEST-12 | AC-06 | Integration (API) | Valid token and a system clock advanced by 61 minutes (fake timers on Date) | Wait past expiry, then GET /api/auth/me | 401 |
 | TEST-13 | AC-07 | Integration (API) | None | GET `/api/auth/me` with no header, with `Bearer garbage`, and with a token signed by another secret | 401 in all three cases; body has no private data |
 | TEST-14 | AC-07 | Integration (API + DB) | Valid token, then user deleted from the test database | GET `/api/auth/me` | 401 |
 | TEST-15 | AC-09 | E2E (Playwright) | Seeded borrower | Log in through the UI, open the catalog, log out, then open `/items` | Catalog shown after login; after logout the browser is on `/login` and `/items` redirects to `/login` |
@@ -160,3 +160,4 @@ Evidence kept for the PDF: test file and test names, command and output (red the
 | Version | Date | Change | Author |
 |---|---|---|---|
 | 1.0 | 2026-11-05 | Initial contract, before implementation | Baptiste |
+| 1.1 | 2026-11-05 | TEST-12 uses an advanced clock instead of a short expiry (faster, same behavior verified) | Baptiste |
