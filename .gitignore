@@ -39,4 +39,6 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
-
+# local environment files (never commit)
+.env.*
+!.env.example
