@@ -70,6 +70,7 @@ describe("POST /api/auth/login (F-01)", () => {
     const wrongPassword = await login(user.username, "not-the-password");
     const unknownUser = await login(`f01_nobody_${randomUUID().slice(0, 8)}`, "not-the-password");
 
+    expect(wrongPassword.status).toBe(401);
     expect(unknownUser.status).toBe(wrongPassword.status);
     expect(unknownUser.body).toEqual(wrongPassword.body);
   });
