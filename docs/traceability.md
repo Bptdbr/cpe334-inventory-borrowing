@@ -2,7 +2,7 @@
 
 **Product:** Equipment Inventory and Borrowing System (Theme 2), CPE 334, Semester 1/2026  
 **Related Issue:** #3  
-**Version:** 1.3 (draft for PR review)  
+**Version:** 1.4  
 **Last updated:** 2026-11-05  
 
 This matrix maps every requirement of `docs/srs.md` to a feature or system responsibility (`docs/features.md`), the sprint that establishes and verifies it, and its verification (acceptance criterion and test).
@@ -33,6 +33,9 @@ Sprint 1 AC and TEST IDs are assigned in the feature contracts (Issues #6, #7, #
 | FR-16 | Inventory summary and overdue report | F-12 | S3 | Not yet elaborated | Planned |
 | FR-17 | Custodian views active loans of managed items | F-06 | S1 | AC-50, AC-54, AC-55 / TEST-79, TEST-80, TEST-88 | Specified |
 | FR-18 | Repeatable seed of demo accounts and catalog | F-03 | S1 | AC-25, AC-26 / TEST-40, TEST-41, TEST-42 | Specified |
+| FR-19 | Custodian approves or rejects a PENDING request (reason on rejection) | F-14 | S2 | Not yet elaborated | Planned |
+| FR-20 | Maintenance status for an item not on loan | F-10 | S2 | Not yet elaborated | Planned |
+| FR-21 | Item category assigned by custodian and displayed | F-11 | S3 | Not yet elaborated | Planned |
 
 ## 2. Business rules
 
@@ -55,6 +58,7 @@ Rules that span several features are split by part. Each part gets its own accep
 | BR-10 | Overdue if and only if due date passed and not returned | F-08 | S2 | Not yet elaborated | Planned |
 | BR-11 | Borrower cancels only own PENDING request | F-09 | S2 | Not yet elaborated | Planned |
 | BR-12 | Retired item cannot be requested; item on loan cannot be retired | F-10 (retire part), F-04 (request side update) | S2 | Not yet elaborated | Planned |
+| BR-13 | Approval/rejection by custodian; checkout only from APPROVED request | F-14, F-05 | S2 | Not yet elaborated | Planned |
 
 ## 3. Non-functional requirements
 
@@ -76,11 +80,11 @@ Rules that span several features are split by part. Each part gets its own accep
 
 | Category | Total | Allocated to a feature or responsibility | Sprint 1 | Sprint 2 | Sprint 3 |
 |---|---|---|---|---|---|
-| FR | 18 | 18 | 11 (FR-01 to FR-09, FR-17, FR-18) | 5 (FR-10 to FR-14) | 2 (FR-15, FR-16) |
-| BR | 12 | 12 | 8 (BR-01 to BR-08, BR-08 add only) | 5 (BR-08 edit, BR-09 to BR-12) | 0 |
+| FR | 21 | 21 | 11 (FR-01 to FR-09, FR-17, FR-18) | 7 (FR-10 to FR-14, FR-19, FR-20) | 3 (FR-15, FR-16, FR-21) |
+| BR | 13 | 13 | 8 (BR-01 to BR-08, BR-08 add only) | 6 (BR-08 edit, BR-09 to BR-13) | 0 |
 | NFR | 11 | 11 | 9 (NFR-01 to NFR-08, NFR-10 design) | 0 | 2 (NFR-09, NFR-11) |
 
-Result: no requirement of the SRS baseline is without a feature or responsibility, and every requirement has a sprint.
+Result: all 21 FRs, 13 BRs, and 11 NFRs from `docs/srs.md` are accounted for with complete feature and sprint allocation.
 
 ## 5. Coverage gaps and open points
 
@@ -115,3 +119,4 @@ Any later change to scope, allocation or requirements is added here with its jus
 | 1.1 | 2026-11-05 | AC/TEST IDs of F-01 and F-02 added (AC-01 to AC-19, TEST-01 to TEST-30); status Specified | Baptiste |
 | 1.2 | 2026-11-05 | AC/TEST IDs of F-03 and F-04 added (AC-20 to AC-36, TEST-31 to TEST-57); status Specified | Léo |
 | 1.3 | 2026-11-05 | AC/TEST IDs of F-05 and F-06 added (AC-37 to AC-55, TEST-58 to TEST-88); all Sprint 1 requirements Specified | Léo |
+| 1.4 | 2026-11-05 | Traceability aligned with SRS 1.1: FR-19 to FR-21 and BR-13 added; total coverage 21 FR / 13 BR | Léo |

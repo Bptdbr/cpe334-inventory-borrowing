@@ -5,10 +5,8 @@
 **Team:** DUBROEUCQ Baptiste [69540460002] and LEPOUTRE Léo [69540460045]
 **Repository:** https://github.com/Bptdbr/cpe334-inventory-borrowing
 **Related Issues:** #4 (sections 1 to 7), #5 (sections 8 to 12)
-**Version:** 0.2 (architecture and data, draft for PR review)
-**Last updated:** 03/11/2026
-
-> **Document status.** Sections 1 to 7 (architecture, stack, repository structure, data model, rule enforcement, database setup and seed) are written in Issue #4. Sections 8 to 12 (role/permission matrix, authentication lifecycle, API and UI conventions, configuration, deployment plan) are written in Issue #5 and are listed here only as headings so that both Issues can be merged without conflicts.
+**Version:** 1.0 (complete system SDS)
+**Last updated:** 2026-11-05
 
 ---
 
@@ -34,6 +32,9 @@ These decisions are also recorded in `docs/decisions.md`. D-17 and D-18 are mark
 | D-16 | The `MAINTENANCE` item status (Sprint 2) and item categories (Sprint 3) are part of the product. | They remain in scope of the full product. |
 | D-17 | Stack: TypeScript, Node.js, Express, React with Vite, PostgreSQL, Prisma. | Same family of tools as in Labs 1 to 4, one language across the stack. |
 | D-18 | Logout is implemented by **revoking the token's identifier (`jti`)** in a `revoked_tokens` table until its natural expiry. | A signed token cannot be invalidated otherwise, and FR-02 requires logout to invalidate it. |
+| D-19 | Passwords hashed using **argon2id** (`argon2` package). | Salt embedded in the hash string, current recommended standard (NFR-02). |
+| D-20 | JWT token carries only identity claims (`sub`, `jti`, `iat`, `exp`), no role; role loaded from DB per request. | Eliminates stale roles and prevents privilege tampering. |
+| D-21 | The SPA stores the token in `sessionStorage`. | Survives page refresh, ends when tab closes, deleted on logout or 401. |
 
 ### 1.4 Scope of this document
 
@@ -378,6 +379,8 @@ sequenceDiagram
 
 Why this is concurrency-safe: when two checkouts target the same item, the second conditional update waits for the first transaction's row lock, then finds the status already `ON_LOAN`, updates zero rows, and rolls back with 409. If both somehow reached the insert, the partial unique index rejects the second loan. The API maps a unique-violation error from Prisma (code `P2002`) to 409.
 
+*Other pending requests:* Under assumption A-08 (Q-03), if other borrowers submitted pending requests for the same item, those requests remain in `PENDING` status. They cannot be fulfilled while the item is `ON_LOAN`.
+
 ### 6.2 Request creation (F-04)
 
 The request service checks that the item exists, is `AVAILABLE` (409 otherwise), then inserts a `PENDING` request. The partial unique index rejects a second pending request from the same borrower for the same item (409).
@@ -610,7 +613,7 @@ Every error has the same body:
 | 401 | `UNAUTHENTICATED`, `INVALID_CREDENTIALS` | Missing, invalid, expired or revoked token; wrong login |
 | 403 | `FORBIDDEN_ROLE` | Role not allowed for the operation |
 | 404 | `NOT_FOUND` | Record absent or outside the caller's scope |
-| 409 | `ITEM_UNAVAILABLE`, `REQUEST_NOT_PENDING`, `DUPLICATE_PENDING_REQUEST`, `ACTIVE_LOAN_EXISTS` | Conflict with the current state |
+| 409 | `ITEM_UNAVAILABLE`, `REQUEST_NOT_PENDING`, `DUPLICATE_PENDING_REQUEST`, `ACTIVE_LOAN_EXISTS`, `DUPLICATE_ASSET_TAG` | Conflict with the current state or duplicate asset tag |
 | 422 | `VALIDATION_ERROR` | Invalid input; may include a `details` array of field messages |
 | 500 | `INTERNAL_ERROR` | Unexpected failure |
 
@@ -633,7 +636,7 @@ Rules:
 
 | Database error | HTTP result |
 |---|---|
-| Unique violation (Prisma `P2002`) on the active-loan or pending-request index | 409 with the matching code |
+| Unique violation (Prisma `P2002`) on active-loan, pending-request, or item asset_tag index | 409 with the matching code (`ACTIVE_LOAN_EXISTS`, `DUPLICATE_PENDING_REQUEST`, `DUPLICATE_ASSET_TAG`) |
 | Zero rows updated by a conditional update | 409 |
 | Any other database error | 500 `INTERNAL_ERROR`, details logged only |
 

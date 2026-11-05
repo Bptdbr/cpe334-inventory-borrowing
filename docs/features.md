@@ -1,9 +1,9 @@
 # Feature Inventory
 
-**Product:** Equipment Inventory and Borrowing System (Theme 2), CPE 334, Semester 1/2026
-**Related Issue:** #3
-**Version:** 1.0 (draft for PR review)
-**Last updated:** 2026-11-03
+**Product:** Equipment Inventory and Borrowing System (Theme 2), CPE 334, Semester 1/2026  
+**Related Issue:** #3  
+**Version:** 1.1  
+**Last updated:** 2026-11-05  
 
 Each feature has a stable ID. Cross-cutting requirements that do not belong to one domain feature are assigned to a named system responsibility (SYS-xx). Requirement IDs come from `docs/srs.md`. Sprint columns follow the allocation in the SRS (section 10).
 
@@ -20,10 +20,11 @@ Each feature has a stable ID. Cross-cutting requirements that do not belong to o
 | F-07 | Item return | The managing custodian records a return: closes the loan and sets the item AVAILABLE. | FR-10, BR-09 | F-05 | S2 |
 | F-08 | Due date and overdue status | Due date recorded at checkout; overdue computed from the due date; overdue loans shown to custodian and borrower. | FR-13, FR-14, BR-10 | F-05, F-07 | S2 |
 | F-09 | Request cancellation | A borrower cancels their own PENDING request. | FR-12, BR-11 | F-04 | S2 |
-| F-10 | Item maintenance | The managing custodian edits an item and retires an item that is not on loan; retired items cannot be requested. | FR-11, BR-08 (edit), BR-12 | F-03 | S2 |
-| F-11 | Catalog search and filtering | Search by name or asset tag, filter by availability status, with a response-time target. | FR-15, NFR-09 | F-03 | S3 |
+| F-10 | Item maintenance | The managing custodian edits an item, sets MAINTENANCE status on an item not on loan, and retires an item; retired items cannot be requested. | FR-11, FR-20, BR-08 (edit), BR-12 | F-03 | S2 |
+| F-11 | Catalog search and filtering | Search by name or asset tag, filter by availability status and item category, with a response-time target. | FR-15, FR-21, NFR-09 | F-03 | S3 |
 | F-12 | Inventory summary and overdue report | Counts of available, on-loan and overdue items and list of overdue loans for managed items. | FR-16 | F-08 | S3 |
 | F-13 | Hardening and accessibility | Failure handling, usability review, regression pass, contrast compliance. | NFR-11 | All | S3 |
+| F-14 | Request approval and rejection | The managing custodian approves or rejects a PENDING request with a rejection reason; checkout in Sprint 2 requires an APPROVED request. | FR-19, BR-13 | F-04 | S2 |
 
 ## 2. System responsibilities (cross-cutting)
 
@@ -43,3 +44,4 @@ Each feature has a stable ID. Cross-cutting requirements that do not belong to o
 | Version | Date | Change | Author |
 |---|---|---|---|
 | 1.0 | 2026-11-03 | Initial feature inventory F-01 to F-13, SYS-01, SYS-02 | Baptiste |
+| 1.1 | 2026-11-05 | Added F-14 (FR-19, BR-13); allocated FR-20 to F-10 and FR-21 to F-11 | Léo |

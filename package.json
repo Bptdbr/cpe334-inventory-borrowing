@@ -1,0 +1,29 @@
+{
+  "name": "cpe334-inventory-borrowing",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Equipment Inventory and Borrowing System - CPE 334 Project",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=backend",
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspace=backend",
+    "test:watch": "npm run test:watch --workspace=backend",
+    "test:e2e": "npm run test:e2e --workspace=frontend",
+    "db:migrate": "npm run db:migrate --workspace=backend",
+    "db:seed": "npm run db:seed --workspace=backend",
+    "db:reset": "npm run db:reset --workspace=backend"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [],
+  "author": "Baptiste Dubroeucq, Léo Lepoutre",
+  "license": "UNLICENSED"
+}
+
