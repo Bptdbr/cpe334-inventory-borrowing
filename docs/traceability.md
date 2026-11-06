@@ -70,7 +70,7 @@ Rules that span several features are split by part. Each part gets its own accep
 | NFR-04 | Configuration by environment variables, no committed secret, `.env.example` | SYS-01 | S1 | S1 | Repository inspection, README run-through (Issues #1, #15) | Planned |
 | NFR-05 | Error responses expose no internal details | F-02 | S1 | S1 | AC-16 / TEST-27 | Verified |
 | NFR-06 | Session or token expires (default 60 min) | F-01 | S1 | S1 | AC-06 / TEST-12 | Verified |
-| NFR-07 | Loading, empty and error states on every screen | SYS-02 | S1 | S1 | Conventions in Issue #5, E2E in Issue #14 | Planned |
+| NFR-07 | Loading, empty and error states on every screen | SYS-02 | S1 | S1 | Shared state components in Issue #13, E2E in Issue #14 | In progress |
 | NFR-08 | Every FR and BR traceable to feature, AC and test | SYS-01 | S1 (baseline) | S1, S2, S3 (updates) | This document | In progress |
 | NFR-09 | Catalog of 500 items listed in under 500 ms | F-11 | S3 | S3 | Not yet elaborated | Planned |
 | NFR-10 | Builds and runs from a clean checkout, ready for Docker | SYS-01 | S1 (design) | Lab 5 (container) | README run-through (Issue #15) | Planned |
@@ -125,3 +125,4 @@ Any later change to scope, allocation or requirements is added here with its jus
 | 1.4 | 2026-11-05 | Traceability aligned with SRS 1.1: FR-19 to FR-21 and BR-13 added; total coverage 21 FR / 13 BR | Léo |
 | 1.5 | 2026-11-06 | Marked F-03 and F-04 backend tests as Verified (Issue #11) | Léo |
 | 1.6 | 2026-11-06 | F-05 and F-06 backend tests executed (TEST-58 to TEST-63, TEST-66 to TEST-86 except E2E); F-02 tests completed on real endpoints (TEST-16, 18 to 24) | Baptiste |
+| 1.7 | 2026-11-06 | Updated SYS-02 / NFR-07 status following Issue #13 (UI auth shell, role navigation and shared states) | Léo |
