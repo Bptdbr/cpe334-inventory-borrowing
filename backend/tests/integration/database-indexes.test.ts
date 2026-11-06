@@ -1,38 +1,44 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { PrismaClient, Role, ItemStatus, RequestStatus, LoanStatus } from "@prisma/client";
+import { Role, ItemStatus, RequestStatus, LoanStatus } from "@prisma/client";
+import { prisma } from "../../src/lib/prisma.js";
 
-const prisma = new PrismaClient();
-let isDatabaseConnected = false;
+const PREFIX = "f09_";
 
 describe("Database Constraints and Partial Indexes (TEST-50, TEST-64, TEST-65)", () => {
   beforeAll(async () => {
-    try {
-      await prisma.$connect();
-      isDatabaseConnected = true;
-    } catch (e: any) {
-      isDatabaseConnected = false;
-      console.warn(
-        "Notice: PostgreSQL connection not established with default test credentials. " +
-        "Ensure your local DATABASE_URL in .env has valid credentials to run live DB assertions."
-      );
-    }
+    await prisma.$connect();
   });
 
   afterAll(async () => {
-    if (isDatabaseConnected) {
-      await prisma.$disconnect();
+    // Cleanup records created during database-indexes tests
+    const testUsers = await prisma.user.findMany({
+      where: { username: { startsWith: PREFIX } },
+      select: { id: true },
+    });
+    const userIds = testUsers.map((u) => u.id);
+
+    if (userIds.length > 0) {
+      await prisma.loan.deleteMany({
+        where: { OR: [{ borrowerId: { in: userIds } }, { custodianId: { in: userIds } }] },
+      });
+      await prisma.loanRequest.deleteMany({
+        where: { borrowerId: { in: userIds } },
+      });
+      await prisma.item.deleteMany({
+        where: { managedBy: { in: userIds } },
+      });
+      await prisma.user.deleteMany({
+        where: { id: { in: userIds } },
+      });
     }
+
+    await prisma.$disconnect();
   });
 
-  it("TEST-50: rejects duplicate PENDING request for same borrower and item via partial index", async ({ skip }) => {
-    if (!isDatabaseConnected) {
-      skip();
-      return;
-    }
-
+  it("TEST-50: rejects duplicate PENDING request for same borrower and item via partial index", async () => {
     const testUser = await prisma.user.create({
       data: {
-        username: `test_borrower_${Date.now()}`,
+        username: `${PREFIX}borrower_${Date.now()}`,
         passwordHash: "$argon2id$v=19$m=65536,t=3,p=4$dummyhashforunittesting",
         displayName: "Test Borrower",
         role: Role.BORROWER,
@@ -41,7 +47,7 @@ describe("Database Constraints and Partial Indexes (TEST-50, TEST-64, TEST-65)",
 
     const testCustodian = await prisma.user.create({
       data: {
-        username: `test_custodian_${Date.now()}`,
+        username: `${PREFIX}custodian_${Date.now()}`,
         passwordHash: "$argon2id$v=19$m=65536,t=3,p=4$dummyhashforunittesting",
         displayName: "Test Custodian",
         role: Role.CUSTODIAN,
@@ -82,15 +88,10 @@ describe("Database Constraints and Partial Indexes (TEST-50, TEST-64, TEST-65)",
     expect(errorThrown).toBe(true);
   });
 
-  it("TEST-64: rejects duplicate ACTIVE loan for same item via partial index", async ({ skip }) => {
-    if (!isDatabaseConnected) {
-      skip();
-      return;
-    }
-
+  it("TEST-64: rejects duplicate ACTIVE loan for same item via partial index", async () => {
     const testCustodian = await prisma.user.create({
       data: {
-        username: `test_cust_loan_${Date.now()}`,
+        username: `${PREFIX}cust_loan_${Date.now()}`,
         passwordHash: "$argon2id$dummy",
         displayName: "Custodian Loan",
         role: Role.CUSTODIAN,
@@ -99,7 +100,7 @@ describe("Database Constraints and Partial Indexes (TEST-50, TEST-64, TEST-65)",
 
     const testBorrower1 = await prisma.user.create({
       data: {
-        username: `test_borr1_${Date.now()}`,
+        username: `${PREFIX}borr1_${Date.now()}`,
         passwordHash: "$argon2id$dummy",
         displayName: "Borrower 1",
         role: Role.BORROWER,
@@ -108,7 +109,7 @@ describe("Database Constraints and Partial Indexes (TEST-50, TEST-64, TEST-65)",
 
     const testBorrower2 = await prisma.user.create({
       data: {
-        username: `test_borr2_${Date.now()}`,
+        username: `${PREFIX}borr2_${Date.now()}`,
         passwordHash: "$argon2id$dummy",
         displayName: "Borrower 2",
         role: Role.BORROWER,
@@ -171,15 +172,10 @@ describe("Database Constraints and Partial Indexes (TEST-50, TEST-64, TEST-65)",
     expect(duplicateLoanRejected).toBe(true);
   });
 
-  it("TEST-65: rejects two loans referencing the same request_id via UNIQUE constraint", async ({ skip }) => {
-    if (!isDatabaseConnected) {
-      skip();
-      return;
-    }
-
+  it("TEST-65: rejects two loans referencing the same request_id via UNIQUE constraint", async () => {
     const testCustodian = await prisma.user.create({
       data: {
-        username: `test_cust_req_${Date.now()}`,
+        username: `${PREFIX}cust_req_${Date.now()}`,
         passwordHash: "$argon2id$dummy",
         displayName: "Custodian Req",
         role: Role.CUSTODIAN,
@@ -188,7 +184,7 @@ describe("Database Constraints and Partial Indexes (TEST-50, TEST-64, TEST-65)",
 
     const testBorrower = await prisma.user.create({
       data: {
-        username: `test_borr_req_${Date.now()}`,
+        username: `${PREFIX}borr_req_${Date.now()}`,
         passwordHash: "$argon2id$dummy",
         displayName: "Borrower Req",
         role: Role.BORROWER,
