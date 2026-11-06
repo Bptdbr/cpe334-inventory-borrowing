@@ -9,11 +9,19 @@ export const TEST_PASSWORD = "Test-Password-2026!";
 const PREFIX = "f05_";
 const TAG_PREFIX = "EQ-F05-";
 
+// Hash once per test run and reuse it: argon2 is deliberately slow.
+// Login still verifies with the real argon2id code path.
+let cachedHash: string | undefined;
+async function testHash() {
+  cachedHash ??= await argon2.hash(TEST_PASSWORD);
+  return cachedHash;
+}
+
 export async function createUser(role: Role) {
   return prisma.user.create({
     data: {
       username: `${PREFIX}${role.toLowerCase()}_${randomUUID().slice(0, 8)}`,
-      passwordHash: await argon2.hash(TEST_PASSWORD),
+      passwordHash: await testHash(),
       displayName: `F05 ${role}`,
       role,
     },
