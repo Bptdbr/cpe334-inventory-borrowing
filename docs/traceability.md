@@ -3,7 +3,7 @@
 **Product:** Equipment Inventory and Borrowing System (Theme 2), CPE 334, Semester 1/2026  
 **Related Issue:** #3  
 **Version:** 1.5  
-**Last updated:** 2026-11-05  
+**Last updated:** 2026-11-06  
 
 This matrix maps every requirement of `docs/srs.md` to a feature or system responsibility (`docs/features.md`), the sprint that establishes and verifies it, and its verification (acceptance criterion and test).
 
@@ -18,10 +18,10 @@ Sprint 1 AC and TEST IDs are assigned in the feature contracts (Issues #6, #7, #
 | FR-01 | Login, reject invalid credentials without revealing which part is wrong | F-01 | S1 | AC-01, AC-02, AC-03, AC-07, AC-09 / TEST-03 to TEST-08, TEST-13, TEST-14, TEST-15 | Verified (backend), TEST-15 E2E pending |
 | FR-02 | Logout invalidates the session or token | F-01 | S1 | AC-05, AC-09 / TEST-10, TEST-11, TEST-15 | Verified (backend), TEST-15 E2E pending |
 | FR-03 | Return identity and role of the current user | F-01 | S1 | AC-04 / TEST-09 | Verified (backend) |
-| FR-04 | Display the catalog with status | F-03 | S1 | AC-20, AC-28 / TEST-31, TEST-32, TEST-45 | Specified |
-| FR-05 | Custodian adds an item (becomes managing custodian, starts AVAILABLE) | F-03 | S1 | AC-21, AC-23, AC-24, AC-28 / TEST-33, TEST-34, TEST-37, TEST-38, TEST-39, TEST-45 | Specified |
-| FR-06 | Borrower requests one AVAILABLE item, creating a PENDING request | F-04 | S1 | AC-29, AC-30, AC-31, AC-32, AC-34, AC-35, AC-36 / TEST-46, TEST-47, TEST-51, TEST-53, TEST-54, TEST-55, TEST-56, TEST-57 | Specified |
-| FR-07 | Borrower views own requests and loans | F-06 | S1 | AC-47, AC-48, AC-54, AC-55 / TEST-74, TEST-75, TEST-76, TEST-77, TEST-86, TEST-87 | Specified |
+| FR-04 | Display the catalog with status | F-03 | S1 | AC-20, AC-28 / TEST-31, TEST-32, TEST-45 | Verified (backend), TEST-45 E2E pending |
+| FR-05 | Custodian adds an item (becomes managing custodian, starts AVAILABLE) | F-03 | S1 | AC-21, AC-23, AC-24, AC-28 / TEST-33, TEST-34, TEST-37, TEST-38, TEST-39, TEST-45 | Verified (backend), TEST-45 E2E pending |
+| FR-06 | Borrower requests one AVAILABLE item, creating a PENDING request | F-04 | S1 | AC-29, AC-30, AC-31, AC-32, AC-34, AC-35, AC-36 / TEST-46, TEST-47, TEST-51, TEST-53, TEST-54, TEST-55, TEST-56, TEST-57 | Verified (backend), TEST-57 E2E pending |
+| FR-07 | Borrower views own requests and loans | F-06 | S1 | AC-47, AC-48, AC-54, AC-55 / TEST-74, TEST-75, TEST-76, TEST-77, TEST-86, TEST-87 | Partially verified (requests/mine verified in Issue #11) |
 | FR-08 | Custodian views requests of managed items | F-06 | S1 | AC-49, AC-54, AC-55 / TEST-78, TEST-88 | Specified |
 | FR-09 | Managing custodian checks out a PENDING request atomically | F-05 | S1 | AC-37, AC-45, AC-46 / TEST-58, TEST-66, TEST-67, TEST-70, TEST-71, TEST-72, TEST-73 | Specified |
 | FR-10 | Custodian records the return of an item | F-07 | S2 | Not yet elaborated | Planned |
@@ -44,15 +44,15 @@ Rules that span several features are split by part. Each part gets its own accep
 | Requirement | Summary | Feature (part) | Sprint | AC / TEST | Status |
 |---|---|---|---|---|---|
 | BR-01 | At most one ACTIVE loan per item | F-05 | S1 | AC-42, AC-43 / TEST-64, TEST-68 | Specified |
-| BR-02 | Only an AVAILABLE item may be requested or checked out (409, no change) | F-04 (request side) | S1 | AC-30 / TEST-48 | Specified |
+| BR-02 | Only an AVAILABLE item may be requested or checked out (409, no change) | F-04 (request side) | S1 | AC-30 / TEST-48 | Verified |
 | BR-02 | (same rule) | F-05 (checkout side) | S1 | AC-41 / TEST-63 | Specified |
 | BR-03 | Managing custodian scope for checkout and visibility | F-02 (access part) | S1 | AC-11, AC-12, AC-14, AC-18, AC-19 / TEST-18, TEST-19, TEST-20, TEST-23, TEST-24, TEST-29, TEST-30 | Partially verified |
 | BR-03 | (same rule) | F-06 (visibility part) | S1 | AC-49, AC-50, AC-51, AC-52, AC-55 / TEST-78, TEST-79, TEST-81, TEST-82, TEST-83, TEST-84, TEST-88 | Specified |
 | BR-04 | Borrower sees and acts only on own records (404 otherwise) | F-02 | S1 | AC-13, AC-17, AC-19 / TEST-21, TEST-22, TEST-28, TEST-30 | Partially verified |
 | BR-05 | Concurrent checkouts never create two ACTIVE loans | F-05 | S1 | AC-42 / TEST-68, TEST-69 | Specified |
-| BR-06 | No two PENDING requests of one borrower for one item (409) | F-04 | S1 | AC-31, AC-32 / TEST-49, TEST-50, TEST-51 | Specified |
+| BR-06 | No two PENDING requests of one borrower for one item (409) | F-04 | S1 | AC-31, AC-32 / TEST-49, TEST-50, TEST-51 | Verified |
 | BR-07 | Only a PENDING request may be checked out, once | F-05 | S1 | AC-40, AC-44 / TEST-62, TEST-65 | Specified |
-| BR-08 | Only the managing custodian changes the catalog entries of an item | F-03 (add) | S1 | AC-21, AC-22 / TEST-33, TEST-35, TEST-36 | Specified |
+| BR-08 | Only the managing custodian changes the catalog entries of an item | F-03 (add) | S1 | AC-21, AC-22 / TEST-33, TEST-35, TEST-36 | Verified |
 | BR-08 | (same rule) | F-10 (edit) | S2 | Not yet elaborated | Planned |
 | BR-09 | Return closes the loan and frees the item | F-07 | S2 | Not yet elaborated | Planned |
 | BR-10 | Overdue if and only if due date passed and not returned | F-08 | S2 | Not yet elaborated | Planned |
@@ -64,7 +64,7 @@ Rules that span several features are split by part. Each part gets its own accep
 
 | Requirement | Summary | Responsibility | Established | Verified | AC / TEST | Status |
 |---|---|---|---|---|---|---|
-| NFR-01 | Unauthenticated request to a protected endpoint returns 401, no private data | F-02 | S1 | S1 | AC-10, AC-15, AC-07 / TEST-16, TEST-17, TEST-25, TEST-26, TEST-13, TEST-14 | Partially verified |
+| NFR-01 | Unauthenticated request to a protected endpoint returns 401, no private data | F-02 | S1 | S1 | AC-10, AC-15, AC-07 / TEST-16, TEST-17, TEST-25, TEST-26, TEST-13, TEST-14 | Verified |
 | NFR-02 | Passwords stored as salted hashes | F-01 | S1 | S1 | AC-08 / TEST-01, TEST-02, TEST-03 | Verified |
 | NFR-03 | Data survives an application restart | F-03 | S1 | S1 | AC-27 / TEST-43, TEST-44 | Specified |
 | NFR-04 | Configuration by environment variables, no committed secret, `.env.example` | SYS-01 | S1 | S1 | Repository inspection, README run-through (Issues #1, #15) | Planned |
@@ -97,7 +97,6 @@ Result: all 21 FRs, 13 BRs, and 11 NFRs from `docs/srs.md` are accounted for wit
 | G-05 | It is not decided whether OVERDUE is stored or derived (SRS state summary). | F-08 design. | Decide in the Sprint 2 contract of F-08. |
 | G-06 | BR-12 ("a retired item cannot be requested") also affects the request flow of F-04. | F-04 must be updated in Sprint 2 when `RETIRED` exists. | Add the AC to the F-10 contract and a regression test on F-04. |
 | G-07 | Assumption A-08 (a rejected checkout leaves the request PENDING) depends on open question Q-03. | F-05 AC for failed checkout. | Resolved in F-05 contract (tested in TEST-63); to be reviewed with approval in Sprint 2. |
-| G-08 | F-02 tests TEST-19, 21 to 26 and 30 are pending: they need the endpoints of Issues #11 and #12 and the UI of Issue #13. | AC-10 to AC-14, AC-15, AC-19 not yet fully verified. | Complete when those Issues are merged; listed as pending, never skipped. |
 
 ## 6. Approved changes
 
@@ -121,4 +120,4 @@ Any later change to scope, allocation or requirements is added here with its jus
 | 1.2 | 2026-11-05 | AC/TEST IDs of F-03 and F-04 added (AC-20 to AC-36, TEST-31 to TEST-57); status Specified | Léo |
 | 1.3 | 2026-11-05 | AC/TEST IDs of F-05 and F-06 added (AC-37 to AC-55, TEST-58 to TEST-88); all Sprint 1 requirements Specified | Léo |
 | 1.4 | 2026-11-05 | Traceability aligned with SRS 1.1: FR-19 to FR-21 and BR-13 added; total coverage 21 FR / 13 BR | Léo |
-| 1.5 | 2026-11-05 | F-01 and F-02 statuses updated after execution (TEST-01 to TEST-14, TEST-16 to TEST-18, TEST-20, TEST-27 to TEST-29 passing); pending tests disclosed in G-08 | Baptiste |
+| 1.5 | 2026-11-06 | Marked F-03 and F-04 backend tests as Verified (Issue #11) | Léo |
