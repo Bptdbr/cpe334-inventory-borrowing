@@ -51,6 +51,9 @@ export function createItem(managedBy: string, status: ItemStatus = ItemStatus.AV
 export function createRequest(itemId: string, borrowerId: string, status: RequestStatus = RequestStatus.PENDING) {
   return prisma.loanRequest.create({ data: { itemId, borrowerId, status } });
 }
+export function createLoan(itemId: string, borrowerId: string, requestId: string, custodianId: string) {
+  return prisma.loan.create({ data: { itemId, borrowerId, requestId, custodianId } });
+}
 
 export async function cleanupCheckoutData() {
   const users = await prisma.user.findMany({
