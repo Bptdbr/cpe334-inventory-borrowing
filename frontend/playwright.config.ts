@@ -1,4 +1,11 @@
 import { defineConfig, devices } from "@playwright/test";
+import path from "node:path";
+
+// E2E must never run against inventory_dev.
+process.loadEnvFile(path.resolve(process.cwd(), "../.env.test"));
+if (!(process.env.DATABASE_URL ?? "").includes("inventory_test")) {
+  throw new Error("E2E refused: DATABASE_URL must point to inventory_test.");
+}
 
 export default defineConfig({
   testDir: "./e2e",
@@ -19,9 +26,9 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: "npm.cmd run dev --workspace=backend",
+      command: "npm.cmd run dev:e2e --workspace=backend",
       url: "http://localhost:3000/health",
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
       timeout: 30000,
     },
     {

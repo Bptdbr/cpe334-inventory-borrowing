@@ -14,7 +14,10 @@
     "db:migrate:dev": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force",
-    "prisma:generate": "prisma generate"
+    "prisma:generate": "prisma generate",
+    "dev:e2e": "tsx --env-file=../.env.test src/server.ts",
+    "db:seed:e2e": "tsx --env-file=../.env.test prisma/seed.ts",
+    "e2e:cleanup": "tsx --env-file=../.env.test scripts/e2e-cleanup.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.4.1",
