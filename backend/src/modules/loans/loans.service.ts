@@ -59,3 +59,59 @@ export async function checkoutRequest(requestId: string, custodianId: string) {
     throw error;
   }
 }
+const itemSelect = { select: { id: true, assetTag: true, name: true } } as const;
+const borrowerSelect = { select: { id: true, username: true, displayName: true } } as const;
+
+// Borrower view: own ACTIVE loans only (FR-07, BR-04).
+export function listMyLoans(borrowerId: string) {
+  return prisma.loan.findMany({
+    where: { borrowerId, status: LoanStatus.ACTIVE },
+    select: {
+      id: true,
+      itemId: true,
+      requestId: true,
+      custodianId: true,
+      status: true,
+      checkedOutAt: true,
+      item: itemSelect,
+    },
+    orderBy: { checkedOutAt: "desc" },
+  });
+}
+
+// Custodian view: ACTIVE loans on managed items only (FR-17, BR-03).
+export function listManagedLoans(custodianId: string) {
+  return prisma.loan.findMany({
+    where: { status: LoanStatus.ACTIVE, item: { managedBy: custodianId } },
+    select: {
+      id: true,
+      itemId: true,
+      borrowerId: true,
+      requestId: true,
+      custodianId: true,
+      status: true,
+      checkedOutAt: true,
+      borrower: borrowerSelect,
+      item: itemSelect,
+    },
+    orderBy: { checkedOutAt: "desc" },
+  });
+}
+
+// Custodian view: requests on managed items only (FR-08, BR-03).
+export function listManagedRequests(custodianId: string) {
+  return prisma.loanRequest.findMany({
+    where: { item: { managedBy: custodianId } },
+    select: {
+      id: true,
+      itemId: true,
+      borrowerId: true,
+      status: true,
+      createdAt: true,
+      fulfilledAt: true,
+      borrower: borrowerSelect,
+      item: itemSelect,
+    },
+    orderBy: { createdAt: "desc" },
+  });
+}

@@ -4,7 +4,7 @@ import { config } from "./config.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
 import { catalogRouter } from "./modules/catalog/catalog.routes.js";
 import { requestsRouter } from "./modules/requests/requests.routes.js";
-import { checkoutRouter } from "./modules/loans/loans.routes.js";
+import { checkoutRouter, loansRouter } from "./modules/loans/loans.routes.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 
 
@@ -26,6 +26,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/items", catalogRouter);
 app.use("/api/requests", requestsRouter);
 app.use("/api/requests", checkoutRouter);
+app.use("/api/loans", loansRouter);
 
 // Must stay last: unknown routes, then the error handler (SDS 10.3).
 // Other routers (loans) are added BEFORE notFoundHandler.
