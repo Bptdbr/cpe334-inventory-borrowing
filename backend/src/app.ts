@@ -4,12 +4,15 @@ import { config } from "./config.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
 import { catalogRouter } from "./modules/catalog/catalog.routes.js";
 import { requestsRouter } from "./modules/requests/requests.routes.js";
+import { checkoutRouter, loansRouter } from "./modules/loans/loans.routes.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
+
 
 export const app = express();
 
 app.use(cors({ origin: config.CORS_ORIGIN }));
 app.use(express.json());
+
 
 // Public health check endpoint (outside /api as defined in SDS 10.1)
 app.get("/health", (_req: Request, res: Response) => {
@@ -22,6 +25,8 @@ app.get("/health", (_req: Request, res: Response) => {
 app.use("/api/auth", authRouter);
 app.use("/api/items", catalogRouter);
 app.use("/api/requests", requestsRouter);
+app.use("/api/requests", checkoutRouter);
+app.use("/api/loans", loansRouter);
 
 // Must stay last: unknown routes, then the error handler (SDS 10.3).
 // Other routers (loans) are added BEFORE notFoundHandler.
