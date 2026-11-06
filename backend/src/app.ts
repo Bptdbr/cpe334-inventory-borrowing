@@ -1,6 +1,8 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
 import { config } from "./config.js";
+import { authRouter } from "./modules/auth/auth.routes.js";
+import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 
 export const app = express();
 
@@ -15,3 +17,9 @@ app.get("/health", (_req: Request, res: Response) => {
   });
 });
 
+app.use("/api/auth", authRouter);
+
+// Must stay last: unknown routes, then the error handler (SDS 10.3).
+// Other routers (items, requests, loans) are added BEFORE notFoundHandler.
+app.use(notFoundHandler);
+app.use(errorHandler);
