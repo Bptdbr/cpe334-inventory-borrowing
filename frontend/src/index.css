@@ -367,3 +367,12 @@ a:focus, button:focus, input:focus {
   font-size: 0.85rem;
   margin-top: 0.35rem;
 }
+.data-table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+.data-table th, .data-table td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #ddd; }
+.status-badge { display: inline-block; padding: 0.1rem 0.5rem; border: 1px solid currentColor; border-radius: 4px; font-size: 0.8rem; font-weight: 600; }
+.status-available, .status-fulfilled, .status-active { color: #1a7f37; }
+.status-pending { color: #9a6700; }
+.status-on_loan { color: #cf222e; }
+.alert-success { background: #e6f4ea; color: #1a7f37; border: 1px solid #1a7f37; }
+.section-title { margin-top: 1.5rem; }
+.inline-form { display: grid; gap: 0.5rem; max-width: 28rem; margin: 1rem 0; }

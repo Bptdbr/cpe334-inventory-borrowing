@@ -2,7 +2,7 @@
 
 **Product:** Equipment Inventory and Borrowing System (Theme 2), CPE 334, Semester 1/2026  
 **Related Issue:** #3  
-**Version:** 1.6  
+**Version:** 1.8 
 **Last updated:** 2026-11-06  
 
 This matrix maps every requirement of `docs/srs.md` to a feature or system responsibility (`docs/features.md`), the sprint that establishes and verifies it, and its verification (acceptance criterion and test).
@@ -21,9 +21,9 @@ Sprint 1 AC and TEST IDs are assigned in the feature contracts (Issues #6, #7, #
 | FR-04 | Display the catalog with status | F-03 | S1 | AC-20, AC-28 / TEST-31, TEST-32, TEST-45 | Verified (backend), TEST-45 E2E pending |
 | FR-05 | Custodian adds an item (becomes managing custodian, starts AVAILABLE) | F-03 | S1 | AC-21, AC-23, AC-24, AC-28 / TEST-33, TEST-34, TEST-37, TEST-38, TEST-39, TEST-45 | Verified (backend), TEST-45 E2E pending |
 | FR-06 | Borrower requests one AVAILABLE item, creating a PENDING request | F-04 | S1 | AC-29, AC-30, AC-31, AC-32, AC-34, AC-35, AC-36 / TEST-46, TEST-47, TEST-51, TEST-53, TEST-54, TEST-55, TEST-56, TEST-57 | Verified (backend), TEST-57 E2E pending |
-| FR-07 | Borrower views own requests and loans | F-06 | S1 | AC-47, AC-48, AC-54, AC-55 / TEST-74, TEST-75, TEST-76, TEST-77, TEST-86, TEST-87 | Verified (backend), TEST-87 E2E pending |
-| FR-08 | Custodian views requests of managed items | F-06 | S1 | AC-49, AC-54, AC-55 / TEST-78, TEST-88 | Verified (backend), TEST-88 E2E pending |
-| FR-09 | Managing custodian checks out a PENDING request atomically | F-05 | S1 | AC-37, AC-45, AC-46 / TEST-58, TEST-66, TEST-67, TEST-70, TEST-71, TEST-72, TEST-73 | Verified (backend), TEST-73 E2E pending |
+| FR-07 | Borrower views own requests and loans | F-06 | S1 | AC-47, AC-48, AC-54, AC-55 / TEST-74, TEST-75, TEST-76, TEST-77, TEST-86, TEST-87 | Verified |
+| FR-08 | Custodian views requests of managed items | F-06 | S1 | AC-49, AC-54, AC-55 / TEST-78, TEST-88 | Verified |
+| FR-09 | Managing custodian checks out a PENDING request atomically | F-05 | S1 | AC-37, AC-45, AC-46 / TEST-58, TEST-66, TEST-67, TEST-70, TEST-71, TEST-72, TEST-73 | Verified |
 | FR-10 | Custodian records the return of an item | F-07 | S2 | Not yet elaborated | Planned |
 | FR-11 | Custodian edits and retires an item | F-10 | S2 | Not yet elaborated | Planned |
 | FR-12 | Borrower cancels own PENDING request | F-09 | S2 | Not yet elaborated | Planned |
@@ -31,7 +31,7 @@ Sprint 1 AC and TEST IDs are assigned in the feature contracts (Issues #6, #7, #
 | FR-14 | Overdue flag and overdue display | F-08 | S2 | Not yet elaborated | Planned |
 | FR-15 | Catalog search and filtering | F-11 | S3 | Not yet elaborated | Planned |
 | FR-16 | Inventory summary and overdue report | F-12 | S3 | Not yet elaborated | Planned |
-| FR-17 | Custodian views active loans of managed items | F-06 | S1 | AC-50, AC-54, AC-55 / TEST-79, TEST-80, TEST-88 | Verified (backend), TEST-88 E2E pending |
+| FR-17 | Custodian views active loans of managed items | F-06 | S1 | AC-50, AC-54, AC-55 / TEST-79, TEST-80, TEST-88 | Verified |
 | FR-18 | Repeatable seed of demo accounts and catalog | F-03 | S1 | AC-25, AC-26 / TEST-40, TEST-41, TEST-42 | Specified |
 | FR-19 | Custodian approves or rejects a PENDING request (reason on rejection) | F-14 | S2 | Not yet elaborated | Planned |
 | FR-20 | Maintenance status for an item not on loan | F-10 | S2 | Not yet elaborated | Planned |
@@ -47,7 +47,7 @@ Rules that span several features are split by part. Each part gets its own accep
 | BR-02 | Only an AVAILABLE item may be requested or checked out (409, no change) | F-04 (request side) | S1 | AC-30 / TEST-48 | Verified |
 | BR-02 | (same rule) | F-05 (checkout side) | S1 | AC-41 / TEST-63 | Verified |
 | BR-03 | Managing custodian scope for checkout and visibility | F-02 (access part) | S1 | AC-11, AC-12, AC-14, AC-18, AC-19 / TEST-18, TEST-19, TEST-20, TEST-23, TEST-24, TEST-29, TEST-30 | Partially verified |
-| BR-03 | (same rule) | F-06 (visibility part) | S1 | AC-49, AC-50, AC-51, AC-52, AC-55 / TEST-78, TEST-79, TEST-81, TEST-82, TEST-83, TEST-84, TEST-88 | Verified (backend) |
+| BR-03 | (same rule) | F-06 (visibility part) | S1 | AC-49, AC-50, AC-51, AC-52, AC-55 / TEST-78, TEST-79, TEST-81, TEST-82, TEST-83, TEST-84, TEST-88 | Verified |
 | BR-04 | Borrower sees and acts only on own records (404 otherwise) | F-02 | S1 | AC-13, AC-17, AC-19 / TEST-21, TEST-22, TEST-28, TEST-30 | Partially verified |
 | BR-05 | Concurrent checkouts never create two ACTIVE loans | F-05 | S1 | AC-42 / TEST-68, TEST-69 | Verified |
 | BR-06 | No two PENDING requests of one borrower for one item (409) | F-04 | S1 | AC-31, AC-32 / TEST-49, TEST-50, TEST-51 | Verified |
@@ -70,7 +70,7 @@ Rules that span several features are split by part. Each part gets its own accep
 | NFR-04 | Configuration by environment variables, no committed secret, `.env.example` | SYS-01 | S1 | S1 | Repository inspection, README run-through (Issues #1, #15) | Planned |
 | NFR-05 | Error responses expose no internal details | F-02 | S1 | S1 | AC-16 / TEST-27 | Verified |
 | NFR-06 | Session or token expires (default 60 min) | F-01 | S1 | S1 | AC-06 / TEST-12 | Verified |
-| NFR-07 | Loading, empty and error states on every screen | SYS-02 | S1 | S1 | Shared state components in Issue #13, E2E in Issue #14 | In progress |
+| NFR-07 | Loading, empty and error states on every screen | SYS-02 | S1 | S1 | Shared state components in Issue #13, E2E in Issue #14 | Partially verified |
 | NFR-08 | Every FR and BR traceable to feature, AC and test | SYS-01 | S1 (baseline) | S1, S2, S3 (updates) | This document | In progress |
 | NFR-09 | Catalog of 500 items listed in under 500 ms | F-11 | S3 | S3 | Not yet elaborated | Planned |
 | NFR-10 | Builds and runs from a clean checkout, ready for Docker | SYS-01 | S1 (design) | Lab 5 (container) | README run-through (Issue #15) | Planned |
@@ -98,8 +98,10 @@ Result: all 21 FRs, 13 BRs, and 11 NFRs from `docs/srs.md` are accounted for wit
 | G-06 | BR-12 ("a retired item cannot be requested") also affects the request flow of F-04. | F-04 must be updated in Sprint 2 when `RETIRED` exists. | Add the AC to the F-10 contract and a regression test on F-04. |
 | G-07 | Assumption A-08 (a rejected checkout leaves the request PENDING) depends on open question Q-03. | F-05 AC for failed checkout. | Resolved in F-05 contract (tested in TEST-63); to be reviewed with approval in Sprint 2. |
 | G-08 | F-02: TEST-19, 21 to 24 now run on real endpoints; TEST-21 is adapted (no by-id read route exists for borrowers, so AC-13 is checked through the filtered list and the 403 on checkout). TEST-25 and TEST-26 are covered by TEST-33 and TEST-47. TEST-30 (E2E) pending Issue #13. | AC-19 not yet verified. | Complete TEST-30 with the UI. |
-| G-09 | TEST-15, 30, 73, 87, 88 (E2E) are pending the UI (Issues #13 and #14). | AC-09, AC-19, AC-46, AC-55 not yet verified. | Written with the UI; never skipped silently. |
+| G-09 | TEST-30 (F-02, AC-19) is covered by Léo's auth-shell E2E (forbidden screen); TEST-73, 87 and 88 pass. Loading and empty states have no dedicated E2E test. | NFR-07 only partially verified. | Disclosed in the PDF. |
 | G-10 | TEST-70 to 72 and TEST-76 to 85 were written after or with the implementation of their endpoints (TEST-76 to 85 red first, TEST-70 to 72 characterization). | TDD evidence applies to TEST-58 to 63, 66 to 69, 76 to 85. | Disclosed in the PDF. |
+| G-11 | TEST-89 and TEST-90 are UI tests added in ui-spec.md, not in the F-04 and F-05 contracts. | Traceability only. | Linked to AC-29, AC-30 and AC-40 here. |
+| G-12 | The Add item form has no E2E test; it is covered at API level by TEST-33 to TEST-39. | AC-21 to AC-24 verified at API only. | Disclosed. |
 
 ## 6. Approved changes
 
@@ -126,3 +128,4 @@ Any later change to scope, allocation or requirements is added here with its jus
 | 1.5 | 2026-11-06 | Marked F-03 and F-04 backend tests as Verified (Issue #11) | Léo |
 | 1.6 | 2026-11-06 | F-05 and F-06 backend tests executed (TEST-58 to TEST-63, TEST-66 to TEST-86 except E2E); F-02 tests completed on real endpoints (TEST-16, 18 to 24) | Baptiste |
 | 1.7 | 2026-11-06 | Updated SYS-02 / NFR-07 status following Issue #13 (UI auth shell, role navigation and shared states) | Léo |
+| 1.8 | 2026-11-06 | Domain UI implemented; E2E TEST-73, 87, 88, 89, 90 passing on inventory_test | Baptiste |
