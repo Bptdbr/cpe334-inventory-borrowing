@@ -1,0 +1,98 @@
+name: CI & Docker Build
+
+on:
+  pull_request:
+    branches:
+      - main
+      - lab5-staging
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-docker:
+    name: test-and-docker
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password_123
+          POSTGRES_DB: inventory_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
+        with:
+          node-version: 24
+          cache: "npm"
+
+      - name: Create CI environment file (.env.test)
+        run: |
+          cat << 'EOF' > .env.test
+          NODE_ENV=test
+          PORT=3000
+          DATABASE_URL="postgresql://test_user:test_password_123@localhost:5432/inventory_test?schema=public"
+          JWT_SECRET="ci-test-jwt-secret-must-be-at-least-32-chars-long"
+          JWT_EXPIRES_IN_MINUTES=60
+          SEED_DEMO_PASSWORD="demo_password_123"
+          CORS_ORIGIN="http://localhost:5173"
+          VITE_API_URL="http://localhost:3000"
+          EOF
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate --schema=backend/prisma/schema.prisma
+
+      - name: Run Prisma migrations
+        run: npx prisma migrate deploy --schema=backend/prisma/schema.prisma
+        env:
+          DATABASE_URL: "postgresql://test_user:test_password_123@localhost:5432/inventory_test?schema=public"
+
+      - name: Run backend unit and integration tests
+        run: npm test
+        env:
+          NODE_ENV: test
+          DATABASE_URL: "postgresql://test_user:test_password_123@localhost:5432/inventory_test?schema=public"
+          JWT_SECRET: "ci-test-jwt-secret-must-be-at-least-32-chars-long"
+
+      - name: Build monorepo workspaces (TypeScript + Vite)
+        run: npm run build
+
+      - name: Install Playwright Chromium with dependencies
+        run: npx playwright install --with-deps chromium
+
+      - name: Seed database for E2E tests
+        run: npm run db:seed:e2e --workspace=backend
+
+      - name: Run Playwright E2E tests
+        run: npm run test:e2e
+
+      - name: Cleanup E2E database records
+        if: always()
+        run: npm run e2e:cleanup --workspace=backend
+
+      - name: Run offline deployment tests (if present)
+        if: hashFiles('deploy/tests/**') != ''
+        run: |
+          python3 -m unittest discover -s deploy/tests
+
+      - name: Build Docker production image (R-01 clean packaging check)
+        run: docker build -t cpe334-inventory:ci .
