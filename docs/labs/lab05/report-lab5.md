@@ -99,8 +99,18 @@
 ### 1.2 Check C-01: Passing CI Run on PR
 *(To record: PR URL, CI Run URL, summary of passed test suites: 78 Vitest, 10 Playwright, Docker build OK).*
 
-### 1.3 Check C-02: Branch Protection Ruleset & Merge Blocking
-*(To be completed in L5-6 with temporary failing branch).*
+### 1.3 Check C-02: Branch Protection Ruleset & Merge Blocking (R-06)
+- **GitHub Ruleset Configuration (`main`):**
+  - Ruleset Name: `protect-main-release` (Enforcement: Active, Target: Default branch `main`).
+  - Restrictions: Restrict deletions, block force pushes.
+  - Pull Request Requirements: 1 required approving review from a teammate; stale reviews dismissed on new pushes.
+  - Status Check Requirements: Strict required check **`test-and-docker`**; branch must be up to date before merging.
+- **Merge Lock Demonstration:**
+  - Branch: `test/lab5-failing-check` (Commit containing intentional test failure in `merge-lock-proof.test.ts`).
+  - PR opened targeting `main`.
+  - Result: CI workflow triggered, job `test-and-docker` failed.
+  - Evidence: Merge button disabled by GitHub with message *"Required status check 'test-and-docker' failed. Merging is blocked."* (Figure 1.4).
+  - PR closed unmerged and branch deleted; `main` remained completely untouched and protected.
 
 ---
 
