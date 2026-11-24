@@ -56,6 +56,7 @@ To satisfy requirement **R-06** and prove that failed checks block entry into th
    - **Enforcement status:** `Active`
 4. **Target branches:**
    - Click **Add target > Include default branch** (targets `main`).
+   - Click **Add target > Include by pattern** and type `lab5-staging` (ensures staging is also protected against accidental merges with failing checks).
 5. **Branch rules to enable:**
    - [x] **Restrict deletions:** Prevents accidental deletion of the `main` branch.
    - [x] **Block force pushes:** Prohibits `git push --force` to preserve immutable release history (R-10).
