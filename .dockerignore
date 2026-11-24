@@ -1,0 +1,16 @@
+# Never send secrets, host dependencies or build output into the image context
+.git
+.github
+node_modules
+**/node_modules
+**/dist
+**/test-results
+**/playwright-report
+.env
+.env.*
+!.env.example
+*.log
+.vscode
+.idea
+docs
+README.md
