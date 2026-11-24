@@ -20,9 +20,7 @@ export function createEnvSchema(env: Record<string, string | undefined> = proces
       ? z.string().min(32).default("test-secret-at-least-32-chars-long-for-testing-only")
       : z.string().min(32, "JWT_SECRET must be at least 32 characters long"),
     JWT_EXPIRES_IN_MINUTES: z.coerce.number().default(60),
-    SEED_DEMO_PASSWORD: isProd
-      ? z.string().min(1, "SEED_DEMO_PASSWORD is required in production and cannot be empty")
-      : z.string().default("demo_password_123"),
+    SEED_DEMO_PASSWORD: z.string().optional(),
     CORS_ORIGIN: z.string().default("http://localhost:5173"),
     VITE_API_URL: z.string().default("http://localhost:3000"),
     CLIENT_DIST_PATH: z.string().optional(),
