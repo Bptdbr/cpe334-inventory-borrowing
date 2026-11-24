@@ -4,13 +4,13 @@ import argon2 from "argon2";
 const prisma = new PrismaClient();
 
 export async function seed() {
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("Refusing to seed database in production environment.");
-  }
-
   const seedPassword = process.env.SEED_DEMO_PASSWORD;
   if (!seedPassword) {
     throw new Error("SEED_DEMO_PASSWORD environment variable is required to run seed.");
+  }
+
+  if (process.env.NODE_ENV === "production" && seedPassword === "demo_password_123") {
+    throw new Error("Refusing to seed database in production with the default demo password.");
   }
 
   const passwordHash = await argon2.hash(seedPassword, { type: argon2.argon2id });
