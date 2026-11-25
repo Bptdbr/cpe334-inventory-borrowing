@@ -150,4 +150,45 @@
 
 ## Part 4: CD Pipeline, Release Workflow & Auditability (15 points)
 
-*(To be filled during L5-7)*
+### 4.1 Continuous Deployment Pipeline (`deploy.yml`)
+- **Workflow File:** `.github/workflows/deploy.yml`
+- **Execution Triggers:**
+  - `push` targeting `main` (triggered upon merging reviewed release PR).
+  - `workflow_dispatch` with optional `image_tag` input (used for immediate manual deployment or rollback to a previous commit SHA).
+- **Security & Keyless Authentication:**
+  - Authenticates to GCP via Workload Identity Federation (WIF) with `WIF_PROVIDER` and `WIF_SERVICE_ACCOUNT` (no static service account JSON keys stored).
+  - Concurrency group `production-deployment` (`cancel-in-progress: false`) prevents race conditions between simultaneous release runs.
+- **Pipeline Stages:**
+  1. **CI Pipeline Gate:** Reuses `.github/workflows/ci-docker.yml` via `workflow_call`. Enforces that PostgreSQL service tests, Prisma migrations, Vitest suite, Vite build, Playwright E2E tests, and Docker packaging pass 100% before initiating deployment.
+  2. **Image Packaging & Immutable Digest Push:**
+     - Builds container using `linux/amd64` architecture.
+     - Tags image with the full 40-character commit SHA (`${{ github.sha }}`).
+     - Pushes image to Artifact Registry (`asia-southeast1-docker.pkg.dev/cpe-se-course-2026/s9bc98308/s9bc98308:<SHA>`).
+     - Extracts the unique, immutable SHA256 image digest (`image@sha256:...`).
+  3. **Atomic Release Script (`deploy/release.sh`):**
+     - Updates Cloud Run migration job `s9bc98308-migrate` with the verified digest, command, Cloud SQL instance socket, and Secret Manager references.
+     - Executes the migration job with `--wait` to ensure all database migrations complete successfully before application rollout.
+     - Updates Cloud Run service `s9bc98308` by digest, switching 100% of live traffic to the newly verified container revision.
+  4. **Post-Deployment Smoke Test (`deploy/smoke_test.py`):**
+     - Queries public service URL with exponential retry for cold starts.
+     - Asserts `GET /health` returns `200 OK`.
+     - Asserts `GET /api/ready` returns `200 OK` (database operational).
+     - Asserts `GET /` returns `200 OK` (React SPA entry HTML).
+     - Executes authenticated workflow: `POST /api/auth/login`, queries `/api/items` with Bearer token, and executes `POST /api/auth/logout`.
+  5. **Audit Summary:** Appends commit SHA, image digest, public service URL, and status to `$GITHUB_STEP_SUMMARY`.
+
+### 4.2 Check C-06: Release Traceability and Running Revision Verification (R-07, R-08)
+- **Reviewed Release PR:** Pull request from `lab5-staging` into `main` reviewed and approved by teammate.
+- **Commit Traceability:**
+  - Deployed revision running on Cloud Run maps directly to the commit SHA tagged in Artifact Registry.
+  - Command to audit running commit:
+    ```bash
+    gcloud run services describe s9bc98308 --region=asia-southeast1 --format='value(spec.template.spec.containers[0].image)'
+    ```
+    Matches image tag in Artifact Registry:
+    ```bash
+    gcloud artifacts docker images list asia-southeast1-docker.pkg.dev/cpe-se-course-2026/s9bc98308/s9bc98308 --include-tags
+    ```
+- **Rollback Procedure:**
+  - If a production defect occurs, dispatch `deploy.yml` with `image_tag=<PREVIOUS_GOOD_SHA>`.
+  - The pipeline pulls the existing immutable image digest, applies migrations if required, and points Cloud Run to the previous working revision in under 60 seconds without rebuilding code.

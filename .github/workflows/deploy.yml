@@ -1,0 +1,118 @@
+name: CD Deployment Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Commit SHA or custom image tag to deploy (defaults to git SHA for rollback or manual deploy)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
+jobs:
+  # Gate: CI tests and packaging verification must be 100% green before release
+  ci:
+    name: Run CI Pipeline Gate
+    uses: ./.github/workflows/ci-docker.yml
+
+  deploy:
+    name: Deploy to Cloud Run
+    needs: [ci]
+    runs-on: ubuntu-latest
+    environment: demo
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Authenticate to Google Cloud via Workload Identity Federation (Keyless)
+        uses: google-github-actions/auth@71f986410dfbc7added4569d411d040a91dc6937 # v2.1.8
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@618fced20cba8745b4e1cb8336878b5ba16226a4 # v2.1.4
+
+      - name: Configure Docker authentication for Artifact Registry
+        run: |
+          gcloud auth configure-docker "${{ vars.GCP_REGION }}-docker.pkg.dev" --quiet
+
+      - name: Determine deployment image tag
+        id: tag
+        run: |
+          DEPLOY_TAG="${{ github.event.inputs.image_tag }}"
+          if [ -z "$DEPLOY_TAG" ]; then
+            DEPLOY_TAG="${{ github.sha }}"
+          fi
+          echo "tag=${DEPLOY_TAG}" >> "$GITHUB_OUTPUT"
+          echo "IMAGE_TAG=${DEPLOY_TAG}" >> "$GITHUB_ENV"
+
+      - name: Build and push production image to Artifact Registry
+        id: build-push
+        run: |
+          REGISTRY="${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/s9bc98308/s9bc98308"
+          IMAGE_TAG="${{ steps.tag.outputs.tag }}"
+          IMAGE_FULL="${REGISTRY}:${IMAGE_TAG}"
+
+          echo "Building production image: ${IMAGE_FULL}..."
+          docker build --platform linux/amd64 -t "${IMAGE_FULL}" .
+
+          echo "Pushing image to Artifact Registry..."
+          docker push "${IMAGE_FULL}"
+
+          # Extract immutable image digest (sha256)
+          IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "${IMAGE_FULL}")
+          echo "digest=${IMAGE_DIGEST}" >> "$GITHUB_OUTPUT"
+          echo "IMAGE_DIGEST=${IMAGE_DIGEST}" >> "$GITHUB_ENV"
+          echo "[+] Immutably tagged image digest: ${IMAGE_DIGEST}"
+
+      - name: Execute atomic migration and Cloud Run deployment
+        id: release
+        run: |
+          chmod +x deploy/release.sh
+          ./deploy/release.sh
+        env:
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GCP_REGION: ${{ vars.GCP_REGION }}
+          IMAGE_DIGEST: ${{ steps.build-push.outputs.digest }}
+          SERVICE_NAME: s9bc98308
+          JOB_NAME: s9bc98308-migrate
+
+      - name: Setup Python for smoke testing
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
+        with:
+          python-version: "3.12"
+
+      - name: Run offline deployment tests
+        run: |
+          python3 -m unittest discover -s deploy/tests
+
+      - name: Execute end-to-end smoke test on public Cloud Run service
+        run: |
+          python3 deploy/smoke_test.py "${{ env.SERVICE_URL }}"
+        env:
+          SMOKE_USER: ${{ secrets.SMOKE_USER || 'borrower1' }}
+          SMOKE_PASSWORD: ${{ secrets.SMOKE_PASSWORD }}
+
+      - name: Record release summary
+        if: always()
+        run: |
+          echo "## Release Deployment Summary (Check C-06)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Deployed Commit:** \`${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Image Tag:** \`${{ steps.tag.outputs.tag }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Image Digest:** \`${{ steps.build-push.outputs.digest }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Public Service URL:** [${{ env.SERVICE_URL }}](${{ env.SERVICE_URL }})" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Status:** ${{ job.status }}" >> "$GITHUB_STEP_SUMMARY"
