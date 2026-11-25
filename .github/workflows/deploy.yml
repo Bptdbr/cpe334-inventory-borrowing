@@ -102,7 +102,7 @@ jobs:
 
       - name: Execute end-to-end smoke test on public Cloud Run service
         run: |
-          python3 deploy/smoke_test.py "${{ env.SERVICE_URL }}"
+          python3 deploy/smoke_test.py "${{ steps.release.outputs.SERVICE_URL }}"
         env:
           SMOKE_USER: ${{ secrets.SMOKE_USER || 'borrower1' }}
           SMOKE_PASSWORD: ${{ secrets.SMOKE_PASSWORD }}
@@ -114,5 +114,5 @@ jobs:
           echo "- **Deployed Commit:** \`${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- **Image Tag:** \`${{ steps.tag.outputs.tag }}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- **Image Digest:** \`${{ steps.build-push.outputs.digest }}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- **Public Service URL:** [${{ env.SERVICE_URL }}](${{ env.SERVICE_URL }})" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Public Service URL:** [${{ steps.release.outputs.SERVICE_URL }}](${{ steps.release.outputs.SERVICE_URL }})" >> "$GITHUB_STEP_SUMMARY"
           echo "- **Status:** ${{ job.status }}" >> "$GITHUB_STEP_SUMMARY"
