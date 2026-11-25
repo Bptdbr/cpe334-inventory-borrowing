@@ -106,14 +106,38 @@ Result: job execution `s9bc98308-migrate-zt2qf` succeeded; service revision `s9b
 
 Persistence check: `./kit.sh env set TZ=UTC` created revision `s9bc98308-00003-stm` on the same image; the requests created before (EQ-001 fulfilled, EQ-007 pending) were still listed afterwards (evidence C-05, to be repeated after a release by the pipeline).
 
-## 6. Release procedure and finding the running commit [TO COMPLETE after L5-7]
+## 6. Release procedure and finding the running commit
 
-Target procedure: reviewed Issue branch, pull request into `lab5-staging` (CI `test-and-docker` must pass), release pull request from `lab5-staging` into `main`, merge, then the `deploy.yml` workflow builds the image tagged with the full commit SHA, runs the migration job and updates the service by digest, followed by a smoke test.
+### 6.1 Automated CD Pipeline Workflow (`deploy.yml`)
+Releases are triggered automatically upon merge to `main` (or manually through `workflow_dispatch` with an optional `image_tag` for rollbacks):
+1. **CI Verification Gate:** The workflow calls `ci-docker.yml` (`test-and-docker`), running PostgreSQL 16, Prisma migrations, Vitest suite, build, and Playwright Chromium tests. No deployment starts unless all tests are 100% green.
+2. **Keyless Authentication:** Connects to GCP via Workload Identity Federation (WIF) with `WIF_PROVIDER` and `WIF_SERVICE_ACCOUNT`.
+3. **Immutably Tagged Image:** Builds the Docker container, tags it with the 40-character commit SHA (`${{ github.sha }}`), pushes to Artifact Registry, and extracts the immutable image digest (`image@sha256:...`).
+4. **Pre-Update Migration Execution:** Runs `deploy/release.sh`:
+   - Updates `s9bc98308-migrate` with the verified digest, command, and Secret Manager references.
+   - Executes the migration job with `--wait` to ensure database schema changes succeed before application rollout.
+5. **Digest Service Deployment:** Updates Cloud Run service `s9bc98308` with the image digest, ensuring 100% traffic switches to the new verified revision.
+6. **Automated Smoke Test:** Executes `deploy/smoke_test.py` against the public Cloud Run URL, testing `/health`, `/api/ready`, `/`, and authenticated session handling.
+7. **Audit Summary:** Emits commit SHA, image digest, and public URL to `$GITHUB_STEP_SUMMARY`.
 
-Finding the commit that is running today:
-- `./kit.sh status` shows the latest revision and the image digest.
-- The image tag in the registry is the full commit SHA: `gcloud artifacts docker images list asia-southeast1-docker.pkg.dev/cpe-se-course-2026/s9bc98308/s9bc98308 --include-tags`.
-- In the pipeline summary: commit, digest and URL [TO COMPLETE].
+### 6.2 How to Identify the Running Commit (Auditability R-08, C-06)
+To verify which commit is running on production at any given moment:
+1. **From Cloud Run Console / CLI:**
+   ```bash
+   gcloud run services describe s9bc98308 --region=asia-southeast1 --format='value(status.latestCreatedRevisionName,spec.template.spec.containers[0].image)'
+   ```
+   The image URI displays the exact digest `image@sha256:...`.
+2. **From Artifact Registry:**
+   ```bash
+   gcloud artifacts docker images list asia-southeast1-docker.pkg.dev/cpe-se-course-2026/s9bc98308/s9bc98308 --include-tags
+   ```
+   Locate the digest matching the Cloud Run container; its tag is the 40-character commit SHA.
+3. **From GitHub Actions:**
+   Open the latest successful run of `CD Deployment Pipeline` (`deploy.yml`). The **Job Summary** displays:
+   - Deployed Commit SHA
+   - Image Digest
+   - Public Service URL
+   - Status: Success
 
 ## 7. Known limitations
 
